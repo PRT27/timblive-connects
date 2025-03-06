@@ -17,7 +17,7 @@ interface ProfileProps {
   bio: string;
   avatar: string;
   tags: string[];
-  featured: boolean;
+  featured?: boolean; // Changed from required to optional
 }
 
 interface ProfileCardProps {
