@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -32,7 +31,7 @@ const SignIn = () => {
       } else {
         toast({
           title: "Authentication failed",
-          description: "Incorrect username or password. Try using NPThwala / CEOLIVE1",
+          description: "Incorrect username or password.",
           variant: "destructive",
         });
       }
@@ -78,7 +77,6 @@ const SignIn = () => {
                       required
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">Try using: NPThwala</p>
                 </div>
 
                 <div className="space-y-2">
@@ -107,7 +105,6 @@ const SignIn = () => {
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground">Try using: CEOLIVE1</p>
                 </div>
               </div>
 
