@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   User, Settings, LogOut, Video, Headphones, 
   Radio, MessageSquare, Users, Bell, Search
@@ -15,9 +14,12 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
 import VideoCard from '@/components/VideoCard';
 import ProfileCard from '@/components/ProfileCard';
+import { useProfile } from '@/contexts/ProfileContext';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
+  const { mainProfile, demoProfiles, featuredVideos, demoVideos } = useProfile();
   const [activeTab, setActiveTab] = useState('home');
 
   const handleLogout = () => {
@@ -25,140 +27,8 @@ const Dashboard = () => {
       title: "Logged out",
       description: "You have been logged out successfully.",
     });
-    // Navigate to home page would happen here in a real app
+    navigate('/');
   };
-
-  // Main user profile
-  const mainProfile = {
-    id: "npthwala",
-    name: "NPThwala The Innovator",
-    role: "Director & Founder",
-    organization: "Khanyasakhe Cleaning and Trading Enterprise & Assistive Tech Solutions Inc",
-    bio: "Focused on accessible technology solutions for disabled people. Creating content about technology, education, and politics that impacts accessible technologies.",
-    avatar: "/placeholder.svg",
-    coverImage: "https://images.unsplash.com/photo-1518770660439-4636190af475",
-    followers: 7845,
-    following: 342,
-    tags: ["Technology", "Education", "Politics", "Accessibility", "Coding"],
-    joined: "January 2022"
-  };
-
-  // Demo profiles
-  const demoProfiles = [
-    {
-      id: "tech-educator",
-      name: "Dr. Maria Chen",
-      role: "Technology Educator",
-      bio: "Teaching the next generation about accessible technology and inclusive design.",
-      avatar: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
-      tags: ["Education", "Technology", "Inclusive Design"],
-      featured: true
-    },
-    {
-      id: "policy-advisor",
-      name: "James Wilson",
-      role: "Policy Advisor",
-      bio: "Working on policies to improve technology accessibility in public sectors.",
-      avatar: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d",
-      tags: ["Politics", "Policy", "Advocacy"],
-      featured: false
-    },
-    {
-      id: "tech-entrepreneur",
-      name: "Sarah Johnson",
-      role: "Tech Entrepreneur",
-      bio: "Building businesses that prioritize accessibility and inclusion in technology.",
-      avatar: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-      tags: ["Business", "Entrepreneurship", "Technology"],
-      featured: true
-    },
-    {
-      id: "developer-advocate",
-      name: "Michael Okonjo",
-      role: "Developer Advocate",
-      bio: "Teaching coding skills with a focus on accessible application development.",
-      avatar: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6",
-      tags: ["Coding", "Development", "Advocacy"],
-      featured: false
-    }
-  ];
-
-  // Sample content for the dashboard
-  const featuredVideos = [
-    {
-      id: "v1",
-      title: "Introduction to Accessible Web Design",
-      thumbnail: "https://i.ytimg.com/vi/20SHvU2PKsM/maxresdefault.jpg",
-      duration: "12:34",
-      views: 24563,
-      date: "2 days ago",
-      creator: mainProfile,
-      videoUrl: "https://www.youtube.com/embed/20SHvU2PKsM"
-    },
-    {
-      id: "v2",
-      title: "Coding Tutorial: Building Screen Reader Friendly Apps",
-      thumbnail: "https://i.ytimg.com/vi/PJl4iabBEz0/maxresdefault.jpg",
-      duration: "28:17",
-      views: 18962,
-      date: "1 week ago",
-      creator: mainProfile,
-      videoUrl: "https://www.youtube.com/embed/PJl4iabBEz0"
-    },
-    {
-      id: "v3",
-      title: "The Future of Assistive Technologies",
-      thumbnail: "https://i.ytimg.com/vi/vd1dLKLd5-4/maxresdefault.jpg",
-      duration: "18:45",
-      views: 35421,
-      date: "3 weeks ago",
-      creator: mainProfile,
-      videoUrl: "https://www.youtube.com/embed/vd1dLKLd5-4"
-    }
-  ];
-
-  const demoVideos = [
-    {
-      id: "d1",
-      title: "Teaching Accessibility in Schools",
-      thumbnail: "https://i.ytimg.com/vi/GBwwkB6AZnE/maxresdefault.jpg",
-      duration: "14:22",
-      views: 12478,
-      date: "5 days ago",
-      creator: demoProfiles[0],
-      videoUrl: "https://www.youtube.com/embed/GBwwkB6AZnE"
-    },
-    {
-      id: "d2",
-      title: "Policy Updates for Accessible Technology",
-      thumbnail: "https://i.ytimg.com/vi/JquHSQUoaGI/maxresdefault.jpg",
-      duration: "22:09",
-      views: 8734,
-      date: "2 weeks ago",
-      creator: demoProfiles[1],
-      videoUrl: "https://www.youtube.com/embed/JquHSQUoaGI"
-    },
-    {
-      id: "d3",
-      title: "Building an Accessible Tech Business",
-      thumbnail: "https://i.ytimg.com/vi/McdyMG-lAJI/maxresdefault.jpg",
-      duration: "31:55",
-      views: 15293,
-      date: "1 month ago",
-      creator: demoProfiles[2],
-      videoUrl: "https://www.youtube.com/embed/McdyMG-lAJI"
-    },
-    {
-      id: "d4",
-      title: "Introduction to Accessible App Development",
-      thumbnail: "https://i.ytimg.com/vi/PQpSVHTgYiU/maxresdefault.jpg",
-      duration: "25:18",
-      views: 19832,
-      date: "3 weeks ago",
-      creator: demoProfiles[3],
-      videoUrl: "https://www.youtube.com/embed/PQpSVHTgYiU"
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -192,7 +62,7 @@ const Dashboard = () => {
                 <AvatarImage src={mainProfile.avatar} alt={mainProfile.name} />
                 <AvatarFallback>NT</AvatarFallback>
               </Avatar>
-              <span className="font-medium hidden md:inline">NPThwala</span>
+              <span className="font-medium hidden md:inline">{mainProfile.name.split(' ')[0]}</span>
             </div>
             <Button variant="ghost" size="icon" onClick={handleLogout} className="text-gray-600">
               <LogOut size={20} />

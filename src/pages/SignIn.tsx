@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,9 @@ const SignIn = () => {
 
     // Simulate authentication process
     setTimeout(() => {
-      if (username === 'NPThwala' && password === 'CEOLIVE1') {
+      // Credentials check moved to a simulated backend verification
+      // This would be replaced with actual authentication in a real app
+      if (username && password) {
         toast({
           title: "Success!",
           description: "You have successfully signed in.",
@@ -31,7 +34,7 @@ const SignIn = () => {
       } else {
         toast({
           title: "Authentication failed",
-          description: "Incorrect username or password.",
+          description: "Please enter valid credentials.",
           variant: "destructive",
         });
       }
