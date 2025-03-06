@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,39 +7,45 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const SignIn = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { signIn, isAuthenticated } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Redirect if already authenticated
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: "Error",
+        description: "Please enter both email and password",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
-
-    // Simulate authentication process
-    setTimeout(() => {
-      // Credentials check moved to a simulated backend verification
-      // This would be replaced with actual authentication in a real app
-      if (username && password) {
-        toast({
-          title: "Success!",
-          description: "You have successfully signed in.",
-          variant: "default",
-        });
-        navigate('/dashboard');
-      } else {
-        toast({
-          title: "Authentication failed",
-          description: "Please enter valid credentials.",
-          variant: "destructive",
-        });
-      }
+    
+    try {
+      await signIn(email, password);
+      // Navigation happens in the signIn function
+    } catch (error) {
       setIsLoading(false);
-    }, 1500);
+      // Error handling happens in the signIn function
+    }
   };
 
   return (
@@ -67,16 +73,16 @@ const SignIn = () => {
             <form onSubmit={handleSubmit} className="mt-8 space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
+                  <Label htmlFor="email">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <Input
-                      id="username"
-                      type="text"
-                      placeholder="Username"
+                      id="email"
+                      type="email"
+                      placeholder="Email"
                       className="pl-10"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                     />
                   </div>
