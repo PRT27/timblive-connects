@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useProfile } from '@/contexts/ProfileContext';
 
-// Update ProfileProps to make 'featured' optional, matching ProfileType
+// Update ProfileProps to support both ways of passing data
 export interface ProfileProps {
   id: string;
   name: string;
@@ -15,13 +15,27 @@ export interface ProfileProps {
   bio: string;
   avatar: string;
   tags: string[];
-  featured?: boolean; // Making featured optional by adding ?
+  featured?: boolean;
   organization?: string;
+  profile?: {
+    id: string;
+    name: string;
+    role: string;
+    bio: string;
+    avatar: string;
+    tags: string[];
+    featured?: boolean;
+    organization?: string;
+  };
 }
 
-const ProfileCard = ({ id, name, role, bio, avatar, tags, featured, organization }: ProfileProps) => {
+const ProfileCard = (props: ProfileProps) => {
   const navigate = useNavigate();
   const { toggleFollowProfile, followedProfiles } = useProfile();
+  
+  // Use profile prop if provided, otherwise use individual props
+  const profile = props.profile || props;
+  const { id, name, role, bio, avatar, tags, featured, organization } = profile;
   
   const isFollowing = followedProfiles.includes(id);
   
