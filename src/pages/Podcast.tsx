@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -9,48 +9,49 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useProfile } from '@/contexts/ProfileContext';
 import { 
   Play, Pause, SkipBack, SkipForward, Volume2, Download, 
-  Heart, Share2, List, MessageSquare, Clock 
+  Heart, Share2, List, MessageSquare, Clock, Mic, MicOff, Save
 } from 'lucide-react';
 
-// Sample podcast data
+// Sample podcast data - updated with Percy's content
 const podcasts = [
   {
-    id: 'entertainment-spotlight',
-    title: 'Entertainment Industry Spotlight',
-    description: 'Join me as we discuss the latest trends in the entertainment industry and share stories from behind the scenes.',
+    id: 'assistive-tech-talks',
+    title: 'Assistive Technology Talks',
+    description: 'Join me as we explore the world of assistive technologies and their impact on improving accessibility for people with disabilities.',
     host: {
-      id: 'thuso-mbedo',
-      name: 'Thuso Mbedo',
-      role: 'Actress & Podcaster',
-      avatar: 'https://images.mubicdn.net/images/cast_member/842214/cache-590465-1602840566/image-w856.jpg'
+      id: 'npthwala',
+      name: 'Nhlanhla Percy Thwala',
+      role: 'Founder & Developer',
+      avatar: '/lovable-uploads/154e58ca-c0f8-48da-ae69-23b7cb16b25f.png'
     },
     coverImage: 'https://images.unsplash.com/photo-1530654260709-4ae1a2ab9d2b',
-    tags: ['Entertainment', 'Acting', 'Behind the Scenes'],
+    tags: ['Assistive Technology', 'Accessibility', 'Innovation'],
     episodes: [
       { 
         id: 'ep1', 
-        title: 'Breaking into the Industry', 
-        duration: '48:22',
-        date: 'May 15, 2023',
-        description: 'Tips and stories about breaking into the entertainment industry and landing your first roles.'
+        title: 'Introduction to ARAN-VI', 
+        duration: '38:22',
+        date: 'May 5, 2025',
+        description: 'An introduction to the Accessible Rural Assistive Network for Visual Impaired (ARAN-VI) mobile application and its features.'
       },
       { 
         id: 'ep2', 
-        title: 'Working with Directors', 
-        duration: '52:10',
-        date: 'May 22, 2023',
-        description: 'How to build strong relationships with directors and make the most of your time on set.'
+        title: 'Accessibility Challenges in Rural Areas', 
+        duration: '42:10',
+        date: 'May 6, 2025',
+        description: 'Discussing the unique accessibility challenges faced by individuals with disabilities in rural areas.'
       },
       { 
         id: 'ep3', 
-        title: 'Navigating Fame', 
+        title: 'Future of Assistive Technologies', 
         duration: '45:35',
-        date: 'May 29, 2023',
-        description: 'Strategies for managing public attention and maintaining your authenticity in the spotlight.'
+        date: 'May 7, 2025',
+        description: 'Exploring emerging trends and innovations in assistive technologies and their potential impact.'
       }
     ],
     subscribers: 12500,
@@ -58,31 +59,31 @@ const podcasts = [
     comments: 856
   },
   {
-    id: 'radio-insights',
-    title: 'Radio Insights with Khutso',
-    description: 'Behind the scenes of radio broadcasting with insights on music, culture, and entertainment.',
+    id: 'township-economy',
+    title: 'Township Economy Insights',
+    description: 'Discussions about township economics, entrepreneurship, and the innovative Township Economy Simulator game.',
     host: {
-      id: 'khutso-theledi',
-      name: 'Khutso Theledi',
-      role: 'Radio Host',
-      avatar: 'https://i0.wp.com/www.sabc.co.za/sabc/wp-content/uploads/2023/05/unnamed-3.jpg'
+      id: 'npthwala',
+      name: 'Nhlanhla Percy Thwala',
+      role: 'Founder & Developer',
+      avatar: '/lovable-uploads/154e58ca-c0f8-48da-ae69-23b7cb16b25f.png'
     },
     coverImage: 'https://images.unsplash.com/photo-1516542076529-1ea3854896f2',
-    tags: ['Radio', 'Music', 'Broadcasting'],
+    tags: ['Economics', 'Township', 'Entrepreneurship'],
     episodes: [
       { 
         id: 'ep1', 
-        title: 'The Art of Radio Hosting', 
-        duration: '42:15',
-        date: 'June 5, 2023',
-        description: 'The skills and techniques that make a successful radio host in today\'s digital age.'
+        title: 'Township Economy Simulator: Development Journey', 
+        duration: '32:15',
+        date: 'May 3, 2025',
+        description: 'The story behind the development of the Township Economy Simulator game and its educational purposes.'
       },
       { 
         id: 'ep2', 
-        title: 'Music Curation for Radio', 
+        title: 'Entrepreneurship in Townships', 
         duration: '38:40',
-        date: 'June 12, 2023',
-        description: 'How to select and program music that resonates with your audience and builds your station\'s brand.'
+        date: 'May 4, 2025',
+        description: 'Exploring the challenges and opportunities for entrepreneurs in South African townships.'
       }
     ],
     subscribers: 8700,
@@ -99,8 +100,131 @@ const Podcast = () => {
   const [currentEpisode, setCurrentEpisode] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   
+  // Microphone recording functionality
+  const [isRecording, setIsRecording] = useState(false);
+  const [micEnabled, setMicEnabled] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const timerRef = useRef<number | null>(null);
+  
   // Find the current podcast
   const podcast = podcasts.find(p => p.id === podcastId);
+  
+  useEffect(() => {
+    // Clean up timer on component unmount
+    return () => {
+      if (timerRef.current) {
+        window.clearInterval(timerRef.current);
+      }
+    };
+  }, []);
+  
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      setMicEnabled(true);
+      
+      const chunks: Blob[] = [];
+      mediaRecorderRef.current.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+      
+      mediaRecorderRef.current.onstop = () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/mpeg' });
+        setAudioChunks([...audioChunks, audioBlob]);
+        
+        // Create URL for the recorded audio
+        if (audioRef.current) {
+          audioRef.current.src = URL.createObjectURL(audioBlob);
+        }
+      };
+      
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+      
+      // Start a timer to track recording duration
+      let seconds = 0;
+      timerRef.current = window.setInterval(() => {
+        seconds++;
+        setRecordingTime(seconds);
+      }, 1000);
+      
+      toast({
+        title: "Recording started",
+        description: "Your microphone is now recording",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      toast({
+        title: "Microphone error",
+        description: "Could not access your microphone",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      
+      // Stop all tracks on the stream
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      
+      // Clear the timer
+      if (timerRef.current) {
+        window.clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      
+      toast({
+        title: "Recording stopped",
+        description: `Recording saved (${formatTime(recordingTime)})`,
+        variant: "default",
+      });
+    }
+  };
+  
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+  
+  const saveRecording = () => {
+    if (audioChunks.length > 0) {
+      // Get the latest recording
+      const latestRecording = audioChunks[audioChunks.length - 1];
+      
+      // Create download link
+      const url = URL.createObjectURL(latestRecording);
+      const a = document.createElement('a');
+      document.body.appendChild(a);
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `recording-${Date.now()}.mp3`;
+      a.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Recording saved",
+        description: "Your recording has been downloaded",
+        variant: "default",
+      });
+    }
+  };
   
   if (!podcast) {
     return (
@@ -179,6 +303,15 @@ const Podcast = () => {
   const [minutes, seconds] = currentEpisodeDuration.split(':').map(Number);
   const totalDuration = minutes * 60 + seconds;
 
+  // Get current date
+  const currentDate = new Date();
+  const formattedDate = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }).format(currentDate);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -200,7 +333,10 @@ const Podcast = () => {
             
             {/* Podcast Info */}
             <div className="md:w-2/3 lg:w-3/4">
-              <h1 className="text-3xl font-bold mb-2">{podcast.title}</h1>
+              <div className="flex justify-between items-start mb-2">
+                <h1 className="text-3xl font-bold">{podcast.title}</h1>
+                <span className="text-sm text-gray-600">{formattedDate}</span>
+              </div>
               
               <div className="flex items-start gap-4 mb-4">
                 <Avatar className="h-12 w-12">
@@ -318,6 +454,58 @@ const Podcast = () => {
                 </div>
               </div>
             </div>
+            
+            {/* Microphone Recording Controls */}
+            <div className="mt-4 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <h4 className="font-medium mr-4">Record Your Own Podcast</h4>
+                  {isRecording && (
+                    <div className="flex items-center">
+                      <span className="animate-pulse bg-red-500 h-2 w-2 rounded-full mr-2"></span>
+                      <span className="text-sm text-gray-600">{formatTime(recordingTime)}</span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button
+                    variant={isRecording ? "destructive" : "outline"}
+                    size="sm"
+                    onClick={toggleRecording}
+                  >
+                    {isRecording ? (
+                      <>
+                        <Pause className="h-4 w-4 mr-2" />
+                        Stop Recording
+                      </>
+                    ) : (
+                      <>
+                        <Mic className="h-4 w-4 mr-2" />
+                        Start Recording
+                      </>
+                    )}
+                  </Button>
+                  
+                  {audioChunks.length > 0 && (
+                    <Button variant="outline" size="sm" onClick={saveRecording}>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Recording
+                    </Button>
+                  )}
+                </div>
+              </div>
+              
+              {/* Hidden audio element for playback */}
+              <audio ref={audioRef} controls className="hidden" />
+              
+              {audioChunks.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-sm text-gray-600 mb-1">Latest Recording:</p>
+                  <audio src={audioRef.current?.src} controls className="w-full" />
+                </div>
+              )}
+            </div>
           </div>
           
           {/* Episode List and Information */}
@@ -392,7 +580,7 @@ const Podcast = () => {
                       
                       <h3 className="text-lg font-medium mb-2">Release Schedule</h3>
                       <p className="text-gray-700">
-                        New episodes are released every Monday at 9:00 AM EST.
+                        New episodes are released every Monday and Wednesday at 9:00 AM SAST.
                       </p>
                     </CardContent>
                   </Card>
@@ -414,14 +602,14 @@ const Podcast = () => {
                             </Avatar>
                             <div>
                               <div className="font-medium text-sm">John Miller</div>
-                              <div className="text-xs text-gray-500">June 12, 2023</div>
+                              <div className="text-xs text-gray-500">May 4, 2025</div>
                             </div>
                           </div>
                           <div className="flex text-yellow-400 mb-2">
                             {'★'.repeat(5)}
                           </div>
                           <p className="text-sm">
-                            This podcast is amazing! I've learned so much about the entertainment industry from listening.
+                            This podcast is amazing! I've learned so much about assistive technologies from listening.
                           </p>
                         </div>
                         
@@ -432,14 +620,14 @@ const Podcast = () => {
                             </Avatar>
                             <div>
                               <div className="font-medium text-sm">Sarah Williams</div>
-                              <div className="text-xs text-gray-500">May 28, 2023</div>
+                              <div className="text-xs text-gray-500">May 3, 2025</div>
                             </div>
                           </div>
                           <div className="flex text-yellow-400 mb-2">
                             {'★'.repeat(4)}
                           </div>
                           <p className="text-sm">
-                            Great insights and interviews. Would love to hear more episodes about breaking into the industry.
+                            Great insights and interviews. Would love to hear more episodes about rural accessibility challenges.
                           </p>
                         </div>
                       </div>
@@ -482,13 +670,13 @@ const Podcast = () => {
               
               <h3 className="text-lg font-medium mb-4 mt-8">Categories</h3>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className="text-gray-700">Entertainment</Badge>
-                <Badge variant="outline" className="text-gray-700">Acting</Badge>
-                <Badge variant="outline" className="text-gray-700">Culture</Badge>
-                <Badge variant="outline" className="text-gray-700">Industry</Badge>
-                <Badge variant="outline" className="text-gray-700">Music</Badge>
-                <Badge variant="outline" className="text-gray-700">Film</Badge>
-                <Badge variant="outline" className="text-gray-700">Television</Badge>
+                <Badge variant="outline" className="text-gray-700">Assistive Technology</Badge>
+                <Badge variant="outline" className="text-gray-700">Accessibility</Badge>
+                <Badge variant="outline" className="text-gray-700">Innovation</Badge>
+                <Badge variant="outline" className="text-gray-700">Economics</Badge>
+                <Badge variant="outline" className="text-gray-700">Township</Badge>
+                <Badge variant="outline" className="text-gray-700">Entrepreneurship</Badge>
+                <Badge variant="outline" className="text-gray-700">Education</Badge>
               </div>
             </div>
           </div>

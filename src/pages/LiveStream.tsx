@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -12,39 +12,39 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { useProfile } from '@/contexts/ProfileContext';
-import { Heart, MessageSquare, Share2, Gift, Users, Settings, MaximizeIcon, PictureInPicture } from 'lucide-react';
+import { Heart, MessageSquare, Share2, Gift, Users, Settings, MaximizeIcon, PictureInPicture, Camera, MicOff, Mic, CameraOff, MoreVertical } from 'lucide-react';
 
-// Sample livestream data
+// Sample livestream data - updated with Percy's content focus
 const livestreams = [
   {
-    id: 'openai-future',
-    title: 'The Future of AI and OpenAI',
-    description: 'Join me as I discuss the latest developments in AI and the future of OpenAI.',
+    id: 'aran-vi-showcase',
+    title: 'ARAN-VI Mobile App Showcase',
+    description: 'Join me for a comprehensive walkthrough of the ARAN-VI mobile application for visually impaired users. I\'ll be demonstrating its key features and discussing the technology behind it.',
     streamer: {
-      id: 'sam-altman',
-      name: 'Sam Altman',
-      role: 'CEO, OpenAI',
-      avatar: 'https://avatars.githubusercontent.com/u/3412640'
+      id: 'npthwala',
+      name: 'Nhlanhla Percy Thwala',
+      role: 'Founder & Developer',
+      avatar: '/lovable-uploads/154e58ca-c0f8-48da-ae69-23b7cb16b25f.png'
     },
-    tags: ['AI', 'Technology', 'Future'],
+    tags: ['Assistive Technology', 'Accessibility', 'Innovation'],
     viewers: 1420,
     likes: 358,
     comments: 124
   },
   {
-    id: 'meta-llama',
-    title: 'Introducing Llama 3.3 - The Next Generation AI',
-    description: 'Learn about our latest AI model and how it will transform the industry.',
+    id: 'tech-solutions',
+    title: 'Innovative Tech Solutions for Disabilities',
+    description: 'Exploring the latest technological innovations for improving accessibility and quality of life for people with disabilities.',
     streamer: {
-      id: 'mark-zuckerberg',
-      name: 'Mark Zuckerberg',
-      role: 'CEO, Meta',
-      avatar: 'https://upload.wikimedia.org/wikipedia/commons/1/18/Mark_Zuckerberg_F8_2019_Keynote_%2832830578717%29_%28cropped%29.jpg'
+      id: 'npthwala',
+      name: 'Nhlanhla Percy Thwala',
+      role: 'Founder & Developer',
+      avatar: '/lovable-uploads/154e58ca-c0f8-48da-ae69-23b7cb16b25f.png'
     },
-    tags: ['AI', 'Meta', 'Technology'],
-    viewers: 2150,
-    likes: 542,
-    comments: 198
+    tags: ['Assistive Technology', 'Innovation', 'Accessibility'],
+    viewers: 1865,
+    likes: 472,
+    comments: 183
   }
 ];
 
@@ -54,13 +54,135 @@ const LiveStream = () => {
   const { toggleFollowProfile, followedProfiles } = useProfile();
   const [chatMessage, setChatMessage] = useState('');
   const [comments, setComments] = useState([
-    { id: 1, user: 'Alex Chen', message: 'This is incredible! 🔥', time: '2m ago' },
-    { id: 2, user: 'Sarah Johnson', message: 'Can you explain more about the new features?', time: '1m ago' },
-    { id: 3, user: 'Michael Brown', message: 'Looking forward to trying this out!', time: 'Just now' }
+    { id: 1, user: 'Alex Chen', message: 'This is incredible technology! 🔥', time: '2m ago' },
+    { id: 2, user: 'Sarah Johnson', message: 'Can you explain more about how ARAN-VI helps with navigation?', time: '1m ago' },
+    { id: 3, user: 'Michael Brown', message: 'Looking forward to trying this app out!', time: 'Just now' }
   ]);
+  
+  // Camera/webcam functionality states
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [streaming, setStreaming] = useState(false);
+  const [cameraEnabled, setCameraEnabled] = useState(false);
+  const [micEnabled, setMicEnabled] = useState(false);
+  const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
+  const [selectedCamera, setSelectedCamera] = useState<string>('');
   
   // Find the current livestream
   const livestream = livestreams.find(stream => stream.id === streamId);
+  
+  useEffect(() => {
+    // Get available cameras
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+      navigator.mediaDevices.enumerateDevices()
+        .then(devices => {
+          const cameras = devices.filter(device => device.kind === 'videoinput');
+          setAvailableCameras(cameras);
+          if (cameras.length > 0) {
+            setSelectedCamera(cameras[0].deviceId);
+          }
+        })
+        .catch(error => {
+          console.error("Error enumerating devices:", error);
+        });
+    }
+  }, []);
+  
+  const startCamera = async () => {
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const constraints = {
+          video: selectedCamera ? { deviceId: { exact: selectedCamera } } : true,
+          audio: micEnabled
+        };
+        
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          setCameraEnabled(true);
+          toast({
+            title: "Camera started",
+            description: "Your camera is now active",
+            variant: "default",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      toast({
+        title: "Camera error",
+        description: "Could not access your camera",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+      setCameraEnabled(false);
+      toast({
+        title: "Camera stopped",
+        description: "Your camera is now off",
+        variant: "default",
+      });
+    }
+  };
+  
+  const toggleCamera = () => {
+    if (cameraEnabled) {
+      stopCamera();
+    } else {
+      startCamera();
+    }
+  };
+  
+  const toggleMicrophone = () => {
+    setMicEnabled(!micEnabled);
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getAudioTracks().forEach(track => {
+        track.enabled = !micEnabled;
+      });
+    }
+    
+    toast({
+      title: micEnabled ? "Microphone muted" : "Microphone unmuted",
+      description: micEnabled ? "Your microphone is now off" : "Your microphone is now on",
+      variant: "default",
+    });
+  };
+  
+  const startStreaming = () => {
+    if (!cameraEnabled) {
+      startCamera().then(() => {
+        setStreaming(true);
+        toast({
+          title: "Live streaming started",
+          description: "Your audience can now see you",
+          variant: "default",
+        });
+      });
+    } else {
+      setStreaming(true);
+      toast({
+        title: "Live streaming started",
+        description: "Your audience can now see you",
+        variant: "default",
+      });
+    }
+  };
+  
+  const stopStreaming = () => {
+    setStreaming(false);
+    toast({
+      title: "Live streaming stopped",
+      description: "Your stream has ended",
+      variant: "default",
+    });
+  };
   
   if (!livestream) {
     return (
@@ -134,6 +256,15 @@ const LiveStream = () => {
     });
   };
 
+  // Format date to show today's date
+  const currentDate = new Date();
+  const formattedDate = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }).format(currentDate);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -145,19 +276,67 @@ const LiveStream = () => {
             <div className="lg:w-3/4">
               {/* Video Player */}
               <div className="relative bg-black rounded-lg overflow-hidden aspect-video mb-4">
-                {/* Placeholder for video */}
-                <div className="absolute inset-0 flex items-center justify-center text-white">
-                  <div className="text-center">
-                    <div className="mb-4">
-                      <svg className="w-16 h-16 mx-auto animate-pulse" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M10 8L16 12L10 16V8Z" fill="currentColor"/>
-                      </svg>
+                {cameraEnabled ? (
+                  <video 
+                    ref={videoRef}
+                    autoPlay 
+                    playsInline 
+                    className="w-full h-full object-cover"
+                    onLoadedMetadata={() => {
+                      if (videoRef.current) {
+                        videoRef.current.play();
+                      }
+                    }}
+                  ></video>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-white">
+                    <div className="text-center">
+                      <div className="mb-4">
+                        <svg className="w-16 h-16 mx-auto animate-pulse" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M10 8L16 12L10 16V8Z" fill="currentColor"/>
+                        </svg>
+                      </div>
+                      <p className="text-lg font-medium">{livestream.title}</p>
+                      <p className="text-sm text-gray-300">Live Stream - {formattedDate}</p>
                     </div>
-                    <p className="text-lg font-medium">{livestream.title}</p>
-                    <p className="text-sm text-gray-300">Live Stream</p>
                   </div>
-                </div>
+                )}
+                
+                {/* Camera Controls - Only show when camera is enabled or streaming */}
+                {(cameraEnabled || streaming) && (
+                  <div className="absolute top-2 right-2 flex gap-2">
+                    <Button
+                      variant="outline" 
+                      size="sm" 
+                      className="bg-black/50 text-white border-none hover:bg-black/70"
+                      onClick={toggleCamera}
+                    >
+                      {cameraEnabled ? <CameraOff className="h-4 w-4" /> : <Camera className="h-4 w-4" />}
+                    </Button>
+                    
+                    <Button
+                      variant="outline" 
+                      size="sm" 
+                      className="bg-black/50 text-white border-none hover:bg-black/70"
+                      onClick={toggleMicrophone}
+                    >
+                      {micEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Stream Controls - Only show when not streaming */}
+                {!streaming && (
+                  <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+                    <Button 
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                      onClick={startStreaming}
+                    >
+                      Start Streaming
+                    </Button>
+                  </div>
+                )}
                 
                 {/* Video Controls */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
@@ -174,6 +353,15 @@ const LiveStream = () => {
                       </div>
                     </div>
                     <div className="flex space-x-2">
+                      {streaming && (
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={stopStreaming}
+                        >
+                          End Stream
+                        </Button>
+                      )}
                       <Button variant="ghost" size="sm" className="text-white">
                         <Settings className="h-5 w-5" />
                       </Button>
@@ -190,7 +378,10 @@ const LiveStream = () => {
               
               {/* Stream Info */}
               <div className="mb-8">
-                <h1 className="text-2xl font-bold mb-2">{livestream.title}</h1>
+                <div className="flex items-center justify-between mb-2">
+                  <h1 className="text-2xl font-bold">{livestream.title}</h1>
+                  <span className="text-sm text-gray-600">Live - {formattedDate}</span>
+                </div>
                 
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex gap-4">
@@ -256,12 +447,12 @@ const LiveStream = () => {
                     <CardContent className="pt-6">
                       <h3 className="text-lg font-medium mb-2">About the Streamer</h3>
                       <p className="text-gray-700 mb-4">
-                        {livestream.streamer.name} is a leading voice in the technology industry, sharing insights on the latest developments in AI and digital transformation.
+                        {livestream.streamer.name} is an entrepreneur and innovator dedicated to creating assistive technologies that improve the lives of people with disabilities, particularly in rural areas.
                       </p>
                       
                       <h3 className="text-lg font-medium mb-2">Stream Schedule</h3>
                       <p className="text-gray-700 mb-4">
-                        Catch {livestream.streamer.name} live every Tuesday and Thursday at 3:00 PM EST, discussing technology trends and answering audience questions.
+                        Catch {livestream.streamer.name} live every Wednesday and Friday at 3:00 PM SAST, discussing assistive technologies and answering audience questions.
                       </p>
                       
                       <Link to={`/profile/${livestream.streamer.id}`}>
@@ -307,17 +498,17 @@ const LiveStream = () => {
                       <div className="space-y-4">
                         <div className="p-4 rounded-lg border">
                           <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-medium">Advanced AI Techniques</h4>
-                            <Badge>Tomorrow</Badge>
+                            <h4 className="font-medium">ARAN-VI App Updates & Features</h4>
+                            <Badge>May 12, 2025</Badge>
                           </div>
-                          <p className="text-sm text-gray-600">3:00 PM - 4:30 PM EST</p>
+                          <p className="text-sm text-gray-600">3:00 PM - 4:30 PM SAST</p>
                         </div>
                         <div className="p-4 rounded-lg border">
                           <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-medium">Q&A Session: Future of Technology</h4>
-                            <Badge>Next Week</Badge>
+                            <h4 className="font-medium">Q&A Session: Assistive Technologies</h4>
+                            <Badge>May 14, 2025</Badge>
                           </div>
-                          <p className="text-sm text-gray-600">2:00 PM - 3:30 PM EST</p>
+                          <p className="text-sm text-gray-600">2:00 PM - 3:30 PM SAST</p>
                         </div>
                       </div>
                     </CardContent>
