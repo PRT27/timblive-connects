@@ -1,332 +1,296 @@
 
-import React, { useEffect, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, Share2, MessageSquare, Bell, BellOff, 
-  Heart, Video, Radio, Headphones, Users, BookOpen
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/components/ui/use-toast';
-import { Separator } from '@/components/ui/separator';
+  Tabs, TabsContent, TabsList, TabsTrigger 
+} from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { useProfile, ProfileType } from '@/contexts/ProfileContext';
 import VideoCard from '@/components/VideoCard';
 import ProfileCard from '@/components/ProfileCard';
-import { useProfile, ProfileType, VideoType } from '@/contexts/ProfileContext';
+import { 
+  CalendarDays, Users, Clock, CheckCheck,
+  Share2, Flag, Settings, ArrowLeft
+} from 'lucide-react';
 
 const UserProfile = () => {
   const { profileId } = useParams<{ profileId: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { mainProfile, demoProfiles, demoVideos, followedProfiles, toggleFollowProfile } = useProfile();
-  const [userProfile, setUserProfile] = useState<ProfileType | null>(null);
-  const [userVideos, setUserVideos] = useState<VideoType[]>([]);
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [isSubscribed, setIsSubscribed] = useState(false);
-
+  const { mainProfile, demoProfiles, featuredVideos, demoVideos, toggleFollowProfile, followedProfiles } = useProfile();
+  const [profile, setProfile] = useState<ProfileType | null>(null);
+  const [userVideos, setUserVideos] = useState(featuredVideos);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("videos");
+  
   useEffect(() => {
-    // Find the profile based on the URL parameter
-    if (profileId === mainProfile.id) {
-      setUserProfile(mainProfile);
-      navigate('/dashboard');
-      return;
-    }
-    
-    const profile = demoProfiles.find(p => p.id === profileId);
-    if (profile) {
-      setUserProfile(profile);
+    // Simulate fetching profile data
+    setTimeout(() => {
+      let foundProfile: ProfileType | undefined;
       
-      // Get videos from this creator
-      const videos = demoVideos.filter(v => v.creator.id === profileId);
-      setUserVideos(videos);
+      if (profileId === mainProfile.id) {
+        foundProfile = mainProfile;
+      } else {
+        foundProfile = demoProfiles.find(p => p.id === profileId);
+      }
       
-      // Check if following
-      setIsFollowing(followedProfiles.includes(profileId));
-    } else {
-      // Profile not found
-      toast({
-        title: "Profile not found",
-        description: "The requested profile doesn't exist or has been removed.",
-        variant: "destructive",
-      });
-      navigate('/dashboard');
-    }
-  }, [profileId, mainProfile, demoProfiles, demoVideos, followedProfiles, navigate, toast]);
-
-  const handleToggleFollow = () => {
-    if (userProfile) {
-      toggleFollowProfile(userProfile.id);
-      setIsFollowing(!isFollowing);
+      if (foundProfile) {
+        setProfile(foundProfile);
+        
+        // Set videos based on profile
+        if (foundProfile.id === mainProfile.id) {
+          setUserVideos(featuredVideos);
+        } else {
+          setUserVideos(demoVideos.filter(v => v.creator.id === foundProfile?.id));
+        }
+      }
       
-      toast({
-        title: isFollowing ? "Unfollowed" : "Following",
-        description: isFollowing 
-          ? `You have unfollowed ${userProfile.name}` 
-          : `You are now following ${userProfile.name}`,
-        variant: "default",
-      });
-    }
-  };
-
-  const handleToggleSubscribe = () => {
-    setIsSubscribed(!isSubscribed);
-    
-    toast({
-      title: isSubscribed ? "Unsubscribed" : "Subscribed",
-      description: isSubscribed 
-        ? "You'll no longer receive notifications for new content" 
-        : "You'll be notified when new content is published",
-      variant: "default",
-    });
-  };
-
-  const handleShare = () => {
-    toast({
-      title: "Share link copied",
-      description: "Profile link has been copied to your clipboard",
-      variant: "default",
-    });
-  };
-
-  if (!userProfile) {
+      setIsLoading(false);
+    }, 500);
+  }, [profileId, mainProfile, demoProfiles, featuredVideos, demoVideos]);
+  
+  const isCurrentUser = profile?.id === mainProfile.id;
+  const isFollowing = profile ? followedProfiles.includes(profile.id) : false;
+  
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-xl text-gray-500">Loading profile...</div>
+        <div className="animate-spin h-8 w-8 border-4 border-timbl rounded-full border-t-transparent"></div>
+      </div>
+    );
+  }
+  
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">Profile Not Found</h2>
+          <p className="text-gray-600 mb-6">The profile you're looking for doesn't exist or has been removed.</p>
+          <Button 
+            onClick={() => navigate('/')}
+            className="bg-timbl hover:bg-timbl-600"
+          >
+            Go Home
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header with back button */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => navigate('/dashboard')}
-            className="text-gray-600"
-          >
-            <ArrowLeft size={20} />
-          </Button>
-          <h1 className="text-xl font-semibold">{userProfile.name}</h1>
-        </div>
+      {/* Back button */}
+      <div className="container mx-auto px-4 pt-6">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mb-4"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
-        {/* Profile Header */}
-        <div className="bg-white rounded-xl overflow-hidden shadow-sm mb-6">
-          {/* Cover image */}
-          <div className="h-48 bg-gray-200 relative">
-            {userProfile.coverImage ? (
-              <img 
-                src={userProfile.coverImage || "https://images.unsplash.com/photo-1518770660439-4636190af475"} 
-                alt="Cover" 
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-r from-timbl-100 to-timbl-300"></div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
-          </div>
-          
-          {/* Profile info */}
-          <div className="relative px-6 pb-6 -mt-16">
-            <Avatar className="h-32 w-32 border-4 border-white rounded-full">
-              <AvatarImage src={userProfile.avatar} alt={userProfile.name} />
-              <AvatarFallback className="text-2xl">{userProfile.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            
-            <div className="mt-4 md:flex md:items-end md:justify-between">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold">{userProfile.name}</h1>
-                <p className="text-gray-600">{userProfile.role}</p>
-                {userProfile.organization && (
-                  <p className="text-gray-600 text-sm mt-1">{userProfile.organization}</p>
-                )}
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {userProfile.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="bg-timbl-100 text-timbl">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <div className="mt-4 md:mt-0 flex gap-3">
-                <Button 
-                  className={isFollowing ? "border-timbl bg-white text-timbl hover:bg-gray-50" : "bg-timbl"}
-                  variant={isFollowing ? "outline" : "default"}
-                  onClick={handleToggleFollow}
-                >
-                  {isFollowing ? "Following" : "Follow"}
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="border-gray-300"
-                  onClick={handleToggleSubscribe}
-                >
-                  {isSubscribed ? <BellOff size={18} className="mr-2" /> : <Bell size={18} className="mr-2" />}
-                  {isSubscribed ? "Subscribed" : "Subscribe"}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="border-gray-300"
-                  onClick={handleShare}
-                >
-                  <Share2 size={18} />
-                </Button>
-              </div>
-            </div>
-            
-            <p className="mt-6 text-gray-700">{userProfile.bio}</p>
-            
-            <div className="mt-6 flex gap-6">
-              <div className="flex items-center gap-1 text-gray-600">
-                <Users size={18} />
-                <span className="text-sm">{userProfile.followers || 0} followers</span>
-              </div>
-              <div className="flex items-center gap-1 text-gray-600">
-                <Heart size={18} />
-                <span className="text-sm">{Math.floor(Math.random() * 500) + 100} likes</span>
-              </div>
-              <div className="flex items-center gap-1 text-gray-600">
-                <Video size={18} />
-                <span className="text-sm">{userVideos.length} videos</span>
+      {/* Profile header with cover image */}
+      <div className="bg-white border-b">
+        <div 
+          className="h-48 bg-gray-200 bg-cover bg-center"
+          style={{ 
+            backgroundImage: profile.coverImage ? `url(${profile.coverImage})` : 'url(https://images.unsplash.com/photo-1603366445787-09714680cbf1)'
+          }}
+        >
+          <div className="container mx-auto px-4 h-full flex items-end">
+            <div className="translate-y-1/2 bg-white p-1 rounded-full">
+              <div className="h-24 w-24 rounded-full bg-gray-200 border-4 border-white overflow-hidden">
+                <img 
+                  src={profile.avatar} 
+                  alt={profile.name} 
+                  className="h-full w-full object-cover"
+                />
               </div>
             </div>
           </div>
         </div>
         
-        {/* Content Tabs */}
-        <Tabs defaultValue="videos" className="mb-8">
-          <TabsList className="grid grid-cols-5 mb-6">
-            <TabsTrigger value="videos">Videos</TabsTrigger>
-            <TabsTrigger value="live">Live</TabsTrigger>
-            <TabsTrigger value="podcasts">Podcasts</TabsTrigger>
-            <TabsTrigger value="playlists">Playlists</TabsTrigger>
-            <TabsTrigger value="about">About</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="videos">
-            {userVideos.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {userVideos.map((video) => (
-                  <VideoCard key={video.id} video={video} />
-                ))}
+        <div className="container mx-auto px-4 pt-16 pb-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-gray-900">{profile.name}</h1>
+                {profile.featured && (
+                  <div className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                    Featured Creator
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="bg-white rounded-xl p-8 text-center">
-                <Video className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No videos yet</h3>
-                <p className="text-gray-600">This creator hasn't uploaded any videos yet.</p>
+              <p className="text-gray-600">{profile.role}</p>
+              {profile.organization && (
+                <p className="text-gray-600">{profile.organization}</p>
+              )}
+            </div>
+            
+            <div className="flex space-x-3">
+              {isCurrentUser ? (
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate('/settings')}
+                  className="flex items-center"
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Edit Profile
+                </Button>
+              ) : (
+                <>
+                  <Button 
+                    onClick={() => toggleFollowProfile(profile.id)}
+                    className={isFollowing ? "bg-gray-100 text-gray-900 hover:bg-gray-200" : "bg-timbl hover:bg-timbl-600"}
+                    variant={isFollowing ? "outline" : "default"}
+                  >
+                    {isFollowing ? (
+                      <>
+                        <CheckCheck className="mr-2 h-4 w-4" />
+                        Following
+                      </>
+                    ) : (
+                      <>
+                        <Users className="mr-2 h-4 w-4" />
+                        Follow
+                      </>
+                    )}
+                  </Button>
+                  <Button variant="outline" className="flex items-center">
+                    <Share2 className="mr-2 h-4 w-4" />
+                    Share
+                  </Button>
+                  <Button variant="ghost" size="icon">
+                    <Flag className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+          
+          {/* Profile stats */}
+          <div className="flex flex-wrap gap-6 mt-6">
+            <div className="flex items-center text-gray-700">
+              <Users className="mr-2 h-4 w-4" />
+              <span className="font-medium">{profile.followers || 0}</span>
+              <span className="text-gray-600 ml-1">Followers</span>
+            </div>
+            <div className="flex items-center text-gray-700">
+              <Users className="mr-2 h-4 w-4" />
+              <span className="font-medium">{profile.following || 0}</span>
+              <span className="text-gray-600 ml-1">Following</span>
+            </div>
+            <div className="flex items-center text-gray-700">
+              <CalendarDays className="mr-2 h-4 w-4" />
+              <span className="text-gray-600">Joined {profile.joined || 'January 2023'}</span>
+            </div>
+          </div>
+          
+          {/* Bio */}
+          <div className="mt-6 max-w-3xl">
+            <p className="text-gray-800">{profile.bio}</p>
+          </div>
+          
+          {/* Tags */}
+          <div className="mt-4 flex flex-wrap gap-2">
+            {profile.tags.map((tag, index) => (
+              <div key={index} className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
+                {tag}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        <Tabs defaultValue="videos" className="space-y-8" onValueChange={setActiveTab}>
+          <TabsList className="grid w-full md:w-auto grid-cols-3 md:inline-flex">
+            <TabsTrigger value="videos">Videos</TabsTrigger>
+            <TabsTrigger value="about">About</TabsTrigger>
+            <TabsTrigger value="channels">Channels</TabsTrigger>
+          </TabsList>
+
+          {/* Videos Tab */}
+          <TabsContent value="videos" className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {userVideos.map((video) => (
+                <VideoCard key={video.id} {...video} />
+              ))}
+            </div>
+            
+            {userVideos.length === 0 && (
+              <div className="text-center py-12 border rounded-lg bg-white">
+                <p className="text-gray-500">No videos available</p>
               </div>
             )}
           </TabsContent>
-          
-          <TabsContent value="live">
-            <div className="bg-white rounded-xl p-8 text-center">
-              <Radio className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Not live right now</h3>
-              <p className="text-gray-600 mb-6">{userProfile.name} is not streaming at the moment.</p>
-              <Button 
-                variant="outline" 
-                className="border-timbl text-timbl"
-                onClick={() => setIsSubscribed(true)}
-              >
-                <Bell size={18} className="mr-2" />
-                Get notified when live
-              </Button>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="podcasts">
-            <div className="bg-white rounded-xl p-8 text-center">
-              <Headphones className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No podcasts yet</h3>
-              <p className="text-gray-600">{userProfile.name} hasn't uploaded any podcasts yet.</p>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="playlists">
-            <div className="bg-white rounded-xl p-8 text-center">
-              <BookOpen className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No playlists yet</h3>
-              <p className="text-gray-600">{userProfile.name} hasn't created any playlists yet.</p>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="about">
-            <div className="bg-white rounded-xl p-6">
-              <h3 className="text-xl font-semibold mb-4">About {userProfile.name}</h3>
+
+          {/* About Tab */}
+          <TabsContent value="about" className="space-y-8">
+            <div className="bg-white p-6 rounded-lg border shadow-sm">
+              <h3 className="font-semibold text-lg mb-4">About {profile.name}</h3>
+              <p className="text-gray-700 whitespace-pre-line">
+                {profile.bio}
+              </p>
               
-              <div className="space-y-6">
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Bio</h4>
-                  <p className="text-gray-700">{userProfile.bio}</p>
-                </div>
-                
-                <Separator />
-                
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Details</h4>
-                  <dl className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">Role</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{userProfile.role}</dd>
+              <div className="mt-6">
+                <h4 className="font-medium mb-2">Details</h4>
+                <div className="space-y-2">
+                  {profile.organization && (
+                    <div className="flex">
+                      <span className="w-32 text-gray-500">Organization:</span>
+                      <span>{profile.organization}</span>
                     </div>
-                    {userProfile.organization && (
-                      <div className="sm:col-span-1">
-                        <dt className="text-sm font-medium text-gray-500">Organization</dt>
-                        <dd className="mt-1 text-sm text-gray-900">{userProfile.organization}</dd>
-                      </div>
-                    )}
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">Joined</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{userProfile.joined || "2022"}</dd>
-                    </div>
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">Content focus</dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        {userProfile.tags.join(", ")}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-                
-                <Separator />
-                
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Connect</h4>
-                  <div className="flex gap-3">
-                    <Button className="bg-timbl">
-                      <MessageSquare size={18} className="mr-2" />
-                      Send Message
-                    </Button>
-                    <Button variant="outline">
-                      <Share2 size={18} className="mr-2" />
-                      Share Profile
-                    </Button>
+                  )}
+                  <div className="flex">
+                    <span className="w-32 text-gray-500">Joined:</span>
+                    <span>{profile.joined || 'January 2023'}</span>
                   </div>
                 </div>
               </div>
             </div>
           </TabsContent>
+
+          {/* Channels Tab */}
+          <TabsContent value="channels" className="space-y-8">
+            <div className="bg-white p-6 rounded-lg border shadow-sm">
+              <h3 className="font-semibold text-lg mb-4">{profile.name}'s Channels</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-medium">Live Streaming</h4>
+                  <p className="text-gray-600 text-sm mt-1">
+                    Real-time videos and interactive sessions
+                  </p>
+                  <Button 
+                    size="sm" 
+                    className="mt-3"
+                    onClick={() => navigate('/livestream')}
+                  >
+                    Visit Channel
+                  </Button>
+                </div>
+                
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-medium">Podcasts</h4>
+                  <p className="text-gray-600 text-sm mt-1">
+                    Audio episodes and discussions
+                  </p>
+                  <Button 
+                    size="sm" 
+                    className="mt-3"
+                    onClick={() => navigate('/podcast')}
+                  >
+                    Visit Channel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
         </Tabs>
-        
-        {/* Similar Creators */}
-        <section className="mt-12">
-          <h2 className="text-xl font-bold mb-6">Similar Creators</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {demoProfiles
-              .filter(p => p.id !== profileId)
-              .slice(0, 3)
-              .map((profile) => (
-                <ProfileCard key={profile.id} profile={profile} />
-              ))}
-          </div>
-        </section>
       </div>
     </div>
   );
