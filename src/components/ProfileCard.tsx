@@ -1,103 +1,118 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { UserPlus, Check, ExternalLink } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useToast } from '@/components/ui/use-toast';
 
-// Update ProfileProps to support both ways of passing data
-export interface ProfileProps {
+interface ProfileProps {
   id: string;
   name: string;
   role: string;
   bio: string;
   avatar: string;
   tags: string[];
-  featured?: boolean;
-  organization?: string;
-  profile?: {
-    id: string;
-    name: string;
-    role: string;
-    bio: string;
-    avatar: string;
-    tags: string[];
-    featured?: boolean;
-    organization?: string;
-  };
+  featured?: boolean; // Changed from required to optional
 }
 
-const ProfileCard = (props: ProfileProps) => {
-  const navigate = useNavigate();
+interface ProfileCardProps {
+  profile: ProfileProps;
+  variant?: 'default' | 'compact';
+}
+
+const ProfileCard = ({ profile, variant = 'default' }: ProfileCardProps) => {
   const { toggleFollowProfile, followedProfiles } = useProfile();
-  
-  // Use profile prop if provided, otherwise use individual props
-  const profile = props.profile || props;
-  const { id, name, role, bio, avatar, tags, featured, organization } = profile;
-  
-  const isFollowing = followedProfiles.includes(id);
-  
-  const handleProfileClick = () => {
-    navigate(`/profile/${id}`);
-  };
-  
-  const handleFollowClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    toggleFollowProfile(id);
+  const { toast } = useToast();
+  const isFollowing = followedProfiles.includes(profile.id);
+
+  const handleFollow = () => {
+    toggleFollowProfile(profile.id);
+    
+    toast({
+      title: isFollowing ? "Unfollowed" : "Following",
+      description: isFollowing 
+        ? `You have unfollowed ${profile.name}` 
+        : `You are now following ${profile.name}`,
+      variant: "default",
+    });
   };
 
   return (
-    <Card 
-      className="h-full overflow-hidden transition-all hover:shadow-md cursor-pointer"
-      onClick={handleProfileClick}
-    >
-      <CardContent className="p-6">
-        <div className="flex items-start space-x-4">
-          <Avatar className="h-12 w-12">
-            <AvatarImage src={avatar} alt={name} />
-            <AvatarFallback>{name.charAt(0)}</AvatarFallback>
+    <Card className={`overflow-hidden transition-all duration-300 hover:shadow-md ${profile.featured ? 'border-timbl/30' : ''}`}>
+      <CardContent className={variant === 'compact' ? 'p-4' : 'p-6'}>
+        <div className="flex gap-4">
+          <Avatar className={variant === 'compact' ? 'h-12 w-12' : 'h-16 w-16'}>
+            <AvatarImage src={profile.avatar} alt={profile.name} />
+            <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
           </Avatar>
-          <div className="space-y-1 flex-1">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium text-lg">{name}</h3>
-              {featured && (
-                <Badge variant="outline" className="bg-timbl-50 text-timbl-600 border-timbl-200">
-                  Featured
-                </Badge>
-              )}
+          
+          <div className="flex-1">
+            <div className="flex justify-between items-start">
+              <div className="group">
+                <Link to={`/profile/${profile.id}`}>
+                  <h3 className="font-medium group-hover:text-timbl transition-colors flex items-center">
+                    {profile.name}
+                    <ExternalLink className="h-3.5 w-3.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </h3>
+                </Link>
+                <p className="text-sm text-gray-600">{profile.role}</p>
+              </div>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      variant={isFollowing ? "outline" : "default"}
+                      className={isFollowing ? "border-timbl text-timbl" : "bg-timbl"}
+                      onClick={handleFollow}
+                    >
+                      {isFollowing ? (
+                        <>
+                          <Check className="h-4 w-4 mr-1" />
+                          {variant === 'default' ? 'Following' : ''}
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="h-4 w-4 mr-1" />
+                          {variant === 'default' ? 'Follow' : ''}
+                        </>
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {isFollowing ? 'Unfollow' : 'Follow'} {profile.name}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
-            <p className="text-sm text-muted-foreground">{role}</p>
-            {organization && (
-              <p className="text-sm text-muted-foreground">{organization}</p>
+            
+            <p className={`text-sm mt-2 ${variant === 'compact' ? 'line-clamp-1' : 'line-clamp-2'}`}>{profile.bio}</p>
+            
+            {variant === 'default' && (
+              <div className="flex flex-wrap gap-1 mt-3">
+                {profile.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-xs bg-gray-100">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
             )}
           </div>
         </div>
         
-        <p className="mt-3 text-sm line-clamp-2">{bio}</p>
-        
-        <div className="mt-4 flex flex-wrap gap-2">
-          {tags.slice(0, 3).map((tag, index) => (
-            <Badge key={index} variant="secondary" className="text-xs">
-              {tag}
+        {profile.featured && variant === 'default' && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <Badge variant="outline" className="bg-timbl-50 text-timbl border-timbl/20 text-xs">
+              Featured Creator
             </Badge>
-          ))}
-          {tags.length > 3 && (
-            <Badge variant="outline" className="text-xs">
-              +{tags.length - 3} more
-            </Badge>
-          )}
-        </div>
-        
-        <Button 
-          variant={isFollowing ? "outline" : "default"}
-          size="sm"
-          className="mt-4 w-full"
-          onClick={handleFollowClick}
-        >
-          {isFollowing ? "Following" : "Follow"}
-        </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

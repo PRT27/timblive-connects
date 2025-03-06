@@ -10,7 +10,7 @@ interface Creator {
   avatar: string;
 }
 
-export interface VideoProps {
+interface VideoProps {
   id: string;
   title: string;
   thumbnail: string;
@@ -21,33 +21,12 @@ export interface VideoProps {
   videoUrl: string;
 }
 
-// Accept either the video as a single prop or all properties directly
-export interface VideoCardProps {
-  video?: VideoProps;
-  id?: string;
-  title?: string;
-  thumbnail?: string;
-  duration?: string;
-  views?: number;
-  date?: string;
-  creator?: Creator;
-  videoUrl?: string;
+interface VideoCardProps {
+  video: VideoProps;
 }
 
-const VideoCard = (props: VideoCardProps) => {
+const VideoCard = ({ video }: VideoCardProps) => {
   const [showEmbed, setShowEmbed] = React.useState(false);
-  
-  // If video prop is provided, use it; otherwise use individual props
-  const video: VideoProps = props.video || {
-    id: props.id || '',
-    title: props.title || '',
-    thumbnail: props.thumbnail || '',
-    duration: props.duration || '',
-    views: props.views || 0,
-    date: props.date || '',
-    creator: props.creator || { id: '', name: '', avatar: '' },
-    videoUrl: props.videoUrl || ''
-  };
 
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow duration-300">
