@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<void> => {
     try {
       setLoading(true);
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -82,7 +82,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       navigate('/dashboard');
-      return data;
     } catch (error) {
       console.error('Sign-in error:', error);
       throw error;
@@ -91,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string, username: string, fullName: string) => {
+  const signUp = async (email: string, password: string, username: string, fullName: string): Promise<void> => {
     try {
       setLoading(true);
       const { data, error } = await supabase.auth.signUp({
@@ -121,7 +120,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       navigate('/dashboard');
-      return data;
     } catch (error) {
       console.error('Sign-up error:', error);
       throw error;
@@ -130,7 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signOut = async () => {
+  const signOut = async (): Promise<void> => {
     try {
       setLoading(true);
       const { error } = await supabase.auth.signOut();
@@ -159,7 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     session,
     user,
     loading,
