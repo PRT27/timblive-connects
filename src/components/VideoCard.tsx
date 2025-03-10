@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Play, Clock, Eye } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,12 +20,12 @@ interface VideoProps {
   videoUrl: string;
 }
 
-interface VideoCardProps {
+export interface VideoCardProps {
   video: VideoProps;
 }
 
 // Alternative prop types for backward compatibility
-interface LegacyVideoCardProps {
+export interface LegacyVideoCardProps {
   id: string;
   title: string;
   thumbnail: string;

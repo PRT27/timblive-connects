@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -211,7 +210,6 @@ const UserProfile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {videos.map((video) => (
                     <VideoCard 
-                      key={video.id}
                       video={{
                         id: video.id,
                         title: video.title,
@@ -219,12 +217,12 @@ const UserProfile = () => {
                         duration: video.duration,
                         views: video.views,
                         date: video.createdAt,
+                        videoUrl: `https://www.youtube.com/embed/${video.id}`,
                         creator: {
                           id: profile.id,
                           name: profile.name,
                           avatar: profile.avatar
-                        },
-                        videoUrl: `https://www.youtube.com/embed/${video.id}`
+                        }
                       }}
                     />
                   ))}

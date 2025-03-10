@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -84,7 +83,7 @@ const InviteSystem = () => {
     // Find the send tab and activate it
     const sendTab = document.querySelector('[data-state="inactive"][value="send"]') as HTMLElement;
     if (sendTab) {
-      sendTab.click();
+      (sendTab as HTMLElement).click();
     }
   };
 
