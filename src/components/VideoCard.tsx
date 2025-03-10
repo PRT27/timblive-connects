@@ -1,7 +1,9 @@
+
 import React from 'react';
-import { Play, Clock, Eye } from 'lucide-react';
+import { Play, Clock, Eye, Radio, Mic } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface Creator {
   id: string;
@@ -9,7 +11,7 @@ interface Creator {
   avatar: string;
 }
 
-interface VideoProps {
+export interface VideoProps {
   id: string;
   title: string;
   thumbnail: string;
@@ -18,6 +20,8 @@ interface VideoProps {
   date: string;
   creator: Creator;
   videoUrl: string;
+  contentType?: 'video' | 'podcast' | 'broadcast' | 'live';
+  isLive?: boolean;
 }
 
 export interface VideoCardProps {
@@ -56,9 +60,25 @@ const VideoCard = (props: VideoCardProps | LegacyVideoCardProps) => {
           id: '1', // default id for legacy props
           name: props.profileName,
           avatar: props.profileAvatar,
-        }
+        },
+        contentType: 'video' as const,
+        isLive: false
       } 
     : props.video;
+
+  // Get the content type icon
+  const getContentTypeIcon = () => {
+    switch (videoData.contentType) {
+      case 'podcast':
+        return <Mic className="h-5 w-5 text-timbl fill-current" />;
+      case 'broadcast':
+        return <Radio className="h-5 w-5 text-timbl fill-current" />;
+      case 'live':
+      case 'video':
+      default:
+        return <Play className="h-5 w-5 text-timbl fill-current ml-1" />;
+    }
+  };
 
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow duration-300">
@@ -85,9 +105,14 @@ const VideoCard = (props: VideoCardProps | LegacyVideoCardProps) => {
             />
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors">
               <div className="h-12 w-12 rounded-full bg-white/90 flex items-center justify-center">
-                <Play className="h-5 w-5 text-timbl fill-current ml-1" />
+                {getContentTypeIcon()}
               </div>
             </div>
+            
+            {videoData.isLive ? (
+              <Badge className="absolute top-2 left-2 bg-red-500 text-white">LIVE</Badge>
+            ) : null}
+            
             <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
               {videoData.duration}
             </div>
