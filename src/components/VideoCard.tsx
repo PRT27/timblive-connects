@@ -25,8 +25,41 @@ interface VideoCardProps {
   video: VideoProps;
 }
 
-const VideoCard = ({ video }: VideoCardProps) => {
+// Alternative prop types for backward compatibility
+interface LegacyVideoCardProps {
+  id: string;
+  title: string;
+  thumbnail: string;
+  duration: string;
+  views: number;
+  timeAgo: string;
+  profileName: string;
+  profileAvatar: string;
+}
+
+const VideoCard = (props: VideoCardProps | LegacyVideoCardProps) => {
   const [showEmbed, setShowEmbed] = React.useState(false);
+  
+  // Determine if we're using the legacy props or the newer video object prop
+  const isLegacyProps = 'id' in props;
+  
+  // Extract the video data based on the props format
+  const videoData = isLegacyProps 
+    ? {
+        id: props.id,
+        title: props.title,
+        thumbnail: props.thumbnail,
+        duration: props.duration,
+        views: props.views,
+        date: props.timeAgo,
+        videoUrl: `https://www.youtube.com/embed/${props.id}`,
+        creator: {
+          id: '1', // default id for legacy props
+          name: props.profileName,
+          avatar: props.profileAvatar,
+        }
+      } 
+    : props.video;
 
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow duration-300">
@@ -34,8 +67,8 @@ const VideoCard = ({ video }: VideoCardProps) => {
         {showEmbed ? (
           <div className="aspect-video">
             <iframe
-              src={video.videoUrl}
-              title={video.title}
+              src={videoData.videoUrl}
+              title={videoData.title}
               className="w-full h-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -47,8 +80,8 @@ const VideoCard = ({ video }: VideoCardProps) => {
             onClick={() => setShowEmbed(true)}
           >
             <img 
-              src={video.thumbnail} 
-              alt={video.title} 
+              src={videoData.thumbnail} 
+              alt={videoData.title} 
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors">
@@ -57,33 +90,33 @@ const VideoCard = ({ video }: VideoCardProps) => {
               </div>
             </div>
             <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-              {video.duration}
+              {videoData.duration}
             </div>
           </div>
         )}
       </div>
       
       <CardContent className="p-4">
-        <h3 className="font-medium line-clamp-2 mb-2">{video.title}</h3>
+        <h3 className="font-medium line-clamp-2 mb-2">{videoData.title}</h3>
         
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6">
-              <AvatarImage src={video.creator.avatar} alt={video.creator.name} />
-              <AvatarFallback>{video.creator.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={videoData.creator.avatar} alt={videoData.creator.name} />
+              <AvatarFallback>{videoData.creator.name.charAt(0)}</AvatarFallback>
             </Avatar>
-            <span className="text-sm text-gray-600 truncate max-w-[120px]">{video.creator.name}</span>
+            <span className="text-sm text-gray-600 truncate max-w-[120px]">{videoData.creator.name}</span>
           </div>
           
           <div className="flex items-center gap-1 text-xs text-gray-500">
             <Eye className="h-3 w-3" />
-            <span>{formatViews(video.views)}</span>
+            <span>{formatViews(videoData.views)}</span>
           </div>
         </div>
         
         <div className="flex items-center mt-2 text-xs text-gray-500">
           <Clock className="h-3 w-3 mr-1" />
-          <span>{video.date}</span>
+          <span>{videoData.date}</span>
         </div>
       </CardContent>
     </Card>

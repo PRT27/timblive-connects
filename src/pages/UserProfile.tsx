@@ -212,14 +212,20 @@ const UserProfile = () => {
                   {videos.map((video) => (
                     <VideoCard 
                       key={video.id}
-                      id={video.id}
-                      title={video.title}
-                      thumbnail={video.thumbnail}
-                      profileName={profile.name}
-                      profileAvatar={profile.avatar}
-                      views={video.views}
-                      timeAgo={video.createdAt}
-                      duration={video.duration}
+                      video={{
+                        id: video.id,
+                        title: video.title,
+                        thumbnail: video.thumbnail,
+                        duration: video.duration,
+                        views: video.views,
+                        date: video.createdAt,
+                        creator: {
+                          id: profile.id,
+                          name: profile.name,
+                          avatar: profile.avatar
+                        },
+                        videoUrl: `https://www.youtube.com/embed/${video.id}`
+                      }}
                     />
                   ))}
                 </div>

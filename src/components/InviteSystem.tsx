@@ -79,6 +79,14 @@ const InviteSystem = () => {
       variant: "default",
     });
   };
+  
+  const switchToSendTab = () => {
+    // Find the send tab and activate it
+    const sendTab = document.querySelector('[data-state="inactive"][value="send"]') as HTMLElement;
+    if (sendTab) {
+      sendTab.click();
+    }
+  };
 
   // Mock data for recent invites
   const recentInvites = [
@@ -285,7 +293,7 @@ const InviteSystem = () => {
                   <h3 className="text-lg font-medium text-white">No invites yet</h3>
                   <p className="text-gray-400 mb-4">Start inviting friends to join TiMBLive</p>
                   <Button 
-                    onClick={() => document.querySelector('[data-state="inactive"][value="send"]')?.click()}
+                    onClick={switchToSendTab}
                     className="bg-[#0077FF] hover:bg-[#33c3f0] text-white"
                   >
                     Send Your First Invite

@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { ArrowLeft, Mail, Lock, Eye, EyeOff, User, Camera } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
@@ -50,8 +51,41 @@ const SignUp = () => {
     setIsLoading(true);
     
     try {
-      await signUp(email, password, username, fullName);
-    } catch (error) {
+      await signUp(email, password);
+      
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        throw userError;
+      }
+      
+      if (user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            username: username,
+            full_name: fullName
+          })
+          .eq('id', user.id);
+          
+        if (profileError) {
+          throw profileError;
+        }
+        
+        toast({
+          title: "Account created",
+          description: "Your account has been successfully created",
+          variant: "default",
+        });
+      }
+    } catch (error: any) {
+      console.error('Sign up error:', error);
+      toast({
+        title: "Sign up failed",
+        description: error.message || "An error occurred during sign up",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
     }
   };
