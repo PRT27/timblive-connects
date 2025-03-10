@@ -1,175 +1,124 @@
 
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, Navigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/components/ui/use-toast';
-import { cn } from '@/lib/utils';
-import { ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Mail, Lock } from 'lucide-react';
 
 const SignIn = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
   const { signIn, isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    // Redirect if already authenticated
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
+  // Redirect if already authenticated
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please enter both email and password",
-        variant: "destructive",
-      });
+      setError('Email and password are required');
       return;
     }
     
-    setIsLoading(true);
-    
     try {
+      setIsLoading(true);
+      setError(null);
       await signIn(email, password);
-      // Navigation happens in the signIn function
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Sign-in error:', error);
+      setError(error.message || 'Failed to sign in. Please check your credentials.');
+    } finally {
       setIsLoading(false);
-      // Error handling happens in the signIn function
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Back button */}
-      <div className="container pt-8">
-        <Link 
-          to="/" 
-          className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-timbl transition-colors"
-        >
-          <ArrowLeft size={16} className="mr-2" />
-          Back to home
-        </Link>
-      </div>
-
-      <div className="flex-1 flex flex-col md:flex-row">
-        {/* Left side - Form */}
-        <div className="w-full md:w-1/2 flex items-center justify-center p-8">
-          <div className="w-full max-w-md space-y-8 animate-fade-in-up">
-            <div className="text-center">
-              <h2 className="text-3xl font-bold tracking-tight">Welcome back</h2>
-              <p className="mt-2 text-gray-600">Sign in to your TiMBLive account</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Email"
-                      className="pl-10"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <Link to="/forgot-password" className="text-xs font-medium text-timbl hover:underline">
-                      Forgot password?
-                    </Link>
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Password"
-                      className="pl-10"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <div className="flex justify-center mb-4">
+            <Link to="/" className="text-2xl font-bold text-timbl">TiMBLive</Link>
+          </div>
+          <CardTitle className="text-2xl font-bold text-center">Sign in to your account</CardTitle>
+          <CardDescription className="text-center">
+            Enter your email below to access your account
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="p-3 text-sm bg-red-50 border border-red-200 text-red-600 rounded-md">
+                {error}
               </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-timbl hover:bg-timbl-600"
-                disabled={isLoading}
-              >
-                {isLoading ? "Signing in..." : "Sign in"}
-              </Button>
-
-              <div className="text-center text-sm">
-                <span className="text-gray-600">Don't have an account?</span>{" "}
-                <Link to="/signup" className="font-medium text-timbl hover:underline">
-                  Sign up
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link 
+                  to="/reset-password" 
+                  className="text-sm font-medium text-timbl hover:text-timbl-600"
+                >
+                  Forgot password?
                 </Link>
               </div>
-            </form>
-          </div>
-        </div>
-
-        {/* Right side - Image/Decorative */}
-        <div className="hidden md:block md:w-1/2 bg-timbl-600 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-timbl-700 to-timbl-500" />
-          
-          {/* Decorative circles */}
-          <div className="absolute top-1/4 right-1/4 w-64 h-64 rounded-full bg-timbl-400 opacity-20 blur-3xl" />
-          <div className="absolute bottom-1/3 left-1/3 w-80 h-80 rounded-full bg-timbl-300 opacity-20 blur-3xl" />
-          
-          <div className="relative h-full flex flex-col items-center justify-center p-12 text-white">
-            <div className="max-w-md text-center space-y-6">
-              <h3 className="text-2xl font-bold">Revolutionize Your Content Creation</h3>
-              <p className="text-white/80">
-                Join thousands of creators who are using TiMBLive to stream, podcast, and broadcast their content to the world.
-              </p>
-              
-              <div className="pt-6">
-                <div className="flex -space-x-2 overflow-hidden justify-center">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div 
-                      key={i}
-                      className={cn(
-                        "inline-block h-12 w-12 rounded-full border-2 border-white",
-                        "bg-timbl-300"
-                      )}
-                    />
-                  ))}
-                </div>
-                <p className="mt-3 text-sm text-white/90">
-                  Join over 10,000+ content creators
-                </p>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10"
+                  required
+                />
               </div>
             </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full bg-timbl hover:bg-timbl-600"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing in...' : 'Sign in'}
+            </Button>
+          </form>
+        </CardContent>
+        
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="text-center text-sm text-gray-500">
+            Don't have an account?{' '}
+            <Link to="/signup" className="font-medium text-timbl hover:text-timbl-600">
+              Sign up
+            </Link>
           </div>
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 };

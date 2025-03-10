@@ -1,6 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-// Define types for demo profiles and the main profile
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
+
+// Define types for profiles and content
 export interface ProfileType {
   id: string;
   name: string;
@@ -30,12 +34,10 @@ export interface VideoType {
 // Create interface for the context values
 interface ProfileContextType {
   mainProfile: ProfileType;
-  demoProfiles: ProfileType[];
-  featuredVideos: VideoType[];
-  demoVideos: VideoType[];
-  updateMainProfile: (updates: Partial<ProfileType>) => void;
-  toggleFollowProfile: (profileId: string) => void;
+  updateMainProfile: (updates: Partial<ProfileType>) => Promise<void>;
+  toggleFollowProfile: (profileId: string) => Promise<void>;
   followedProfiles: string[];
+  getUserProfile: (userId: string) => Promise<ProfileType | null>;
 }
 
 // Create the context
@@ -47,128 +49,183 @@ interface ProfileProviderProps {
 }
 
 export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) => {
-  // Main user profile - updated to match Percy's information
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [mainProfile, setMainProfile] = useState<ProfileType>({
-    id: "npthwala",
-    name: "Nhlanhla Percy Thwala",
-    role: "Founder & Developer",
-    organization: "Assistive Tech Solutions Inc. & Khanyasakhe Cleaning and Trading Enterprise",
-    bio: "I'm a 36-year-old entrepreneur and innovator passionate about leveraging technology to address societal challenges, focused on improving the lives of people with disabilities through accessible technology.",
-    avatar: "/lovable-uploads/154e58ca-c0f8-48da-ae69-23b7cb16b25f.png",
-    coverImage: "https://images.unsplash.com/photo-1518770660439-4636190af475",
-    followers: 7845,
-    following: 342,
-    tags: ["Assistive Technology", "Accessibility", "Innovation", "Entrepreneurship", "Education"],
-    joined: "January 2022"
+    id: "",
+    name: "",
+    role: "",
+    bio: "",
+    avatar: "",
+    tags: [],
   });
-
-  // Demo profiles for featured creators - keeping only relevant ones and updating dates
-  const [demoProfiles, setDemoProfiles] = useState<ProfileType[]>([
-    {
-      id: "sam-altman",
-      name: "Sam Altman",
-      role: "CEO of OpenAI",
-      bio: "Leading innovation in artificial intelligence and the development of AI systems like GPT-4.",
-      avatar: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
-      tags: ["AI", "Technology", "Innovation"],
-      featured: true
-    },
-    {
-      id: "mark-zuckerberg",
-      name: "Mark Zuckerberg",
-      role: "CEO of Meta",
-      bio: "Working on advancing AI through the Llama 3.3 model and other Meta technologies.",
-      avatar: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d",
-      tags: ["Meta", "AI", "Technology"],
-      featured: true
-    }
-  ]);
-
-  // Sample content for the dashboard - featured videos with updated dates
-  const [featuredVideos, setFeaturedVideos] = useState<VideoType[]>([
-    {
-      id: "v1",
-      title: "ARAN-VI: Accessible Rural Assistive Network for Visual Impaired",
-      thumbnail: "https://i.ytimg.com/vi/20SHvU2PKsM/maxresdefault.jpg",
-      duration: "18:34",
-      views: 24563,
-      date: "May 5, 2025",
-      creator: mainProfile,
-      videoUrl: "https://www.youtube.com/embed/20SHvU2PKsM"
-    },
-    {
-      id: "v2",
-      title: "Township Economy Simulator - Development Update",
-      thumbnail: "https://i.ytimg.com/vi/PJl4iabBEz0/maxresdefault.jpg",
-      duration: "22:17",
-      views: 18962,
-      date: "May 6, 2025",
-      creator: mainProfile,
-      videoUrl: "https://www.youtube.com/embed/PJl4iabBEz0"
-    },
-    {
-      id: "v3",
-      title: "The Future of Assistive Technologies in Rural Areas",
-      thumbnail: "https://i.ytimg.com/vi/vd1dLKLd5-4/maxresdefault.jpg",
-      duration: "25:45",
-      views: 35421,
-      date: "May 7, 2025",
-      creator: mainProfile,
-      videoUrl: "https://www.youtube.com/embed/vd1dLKLd5-4"
-    }
-  ]);
-
-  // Demo videos from other creators with updated dates
-  const [demoVideos, setDemoVideos] = useState<VideoType[]>([
-    {
-      id: "d1",
-      title: "The Future of OpenAI and GPT-5",
-      thumbnail: "https://i.ytimg.com/vi/GBwwkB6AZnE/maxresdefault.jpg",
-      duration: "14:22",
-      views: 125478,
-      date: "May 3, 2025",
-      creator: demoProfiles[0],
-      videoUrl: "https://www.youtube.com/embed/GBwwkB6AZnE"
-    },
-    {
-      id: "d2",
-      title: "Introducing Llama 3.3: Open Source AI",
-      thumbnail: "https://i.ytimg.com/vi/JquHSQUoaGI/maxresdefault.jpg",
-      duration: "22:09",
-      views: 87340,
-      date: "May 2, 2025",
-      creator: demoProfiles[1],
-      videoUrl: "https://www.youtube.com/embed/JquHSQUoaGI"
-    }
-  ]);
-
-  // Track followed profiles
   const [followedProfiles, setFollowedProfiles] = useState<string[]>([]);
 
+  // Fetch the current user's profile
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchProfile = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) {
+          console.error('Error fetching profile:', error);
+          return;
+        }
+        
+        if (data) {
+          setMainProfile({
+            id: data.id,
+            name: data.full_name || 'Anonymous User',
+            role: data.role || 'Creator',
+            bio: data.bio || '',
+            avatar: data.avatar_url || '/placeholder.svg',
+            tags: data.tags || [],
+            organization: data.organization,
+            followers: data.followers,
+            following: data.following,
+            joined: data.joined ? new Date(data.joined).toLocaleDateString('en-US', { 
+              month: 'long', 
+              year: 'numeric' 
+            }) : 'January 2022',
+            coverImage: data.cover_image,
+          });
+        }
+      } catch (error) {
+        console.error('Unexpected error fetching profile:', error);
+      }
+    };
+    
+    fetchProfile();
+  }, [user]);
+
+  // Get a user profile by ID
+  const getUserProfile = async (userId: string): Promise<ProfileType | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+      
+      if (data) {
+        return {
+          id: data.id,
+          name: data.full_name || 'Anonymous User',
+          role: data.role || 'Creator',
+          bio: data.bio || '',
+          avatar: data.avatar_url || '/placeholder.svg',
+          tags: data.tags || [],
+          organization: data.organization,
+          followers: data.followers,
+          following: data.following,
+          joined: data.joined ? new Date(data.joined).toLocaleDateString('en-US', { 
+            month: 'long', 
+            year: 'numeric' 
+          }) : undefined,
+          coverImage: data.cover_image,
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Unexpected error fetching user profile:', error);
+      return null;
+    }
+  };
+
   // Update the main profile
-  const updateMainProfile = (updates: Partial<ProfileType>) => {
-    setMainProfile(prev => ({ ...prev, ...updates }));
+  const updateMainProfile = async (updates: Partial<ProfileType>): Promise<void> => {
+    if (!user) return;
+    
+    try {
+      // Convert from our frontend model to DB model
+      const dbUpdates: any = {};
+      
+      if (updates.name) dbUpdates.full_name = updates.name;
+      if (updates.bio) dbUpdates.bio = updates.bio;
+      if (updates.role) dbUpdates.role = updates.role;
+      if (updates.avatar) dbUpdates.avatar_url = updates.avatar;
+      if (updates.tags) dbUpdates.tags = updates.tags;
+      if (updates.organization) dbUpdates.organization = updates.organization;
+      if (updates.coverImage) dbUpdates.cover_image = updates.coverImage;
+      
+      dbUpdates.updated_at = new Date().toISOString();
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update(dbUpdates)
+        .eq('id', user.id);
+      
+      if (error) {
+        toast({
+          title: "Failed to update profile",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
+      
+      // Update local state
+      setMainProfile(prev => ({ ...prev, ...updates }));
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been successfully updated.",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      throw error;
+    }
   };
 
   // Toggle following a profile
-  const toggleFollowProfile = (profileId: string) => {
-    setFollowedProfiles(prev => 
-      prev.includes(profileId) 
-        ? prev.filter(id => id !== profileId) 
-        : [...prev, profileId]
-    );
+  const toggleFollowProfile = async (profileId: string): Promise<void> => {
+    if (!user || profileId === user.id) return;
+    
+    const isFollowing = followedProfiles.includes(profileId);
+    
+    try {
+      // TODO: In a real app, you would implement the follow/unfollow logic in the database
+      // For now, we'll just update the local state
+      setFollowedProfiles(prev => 
+        isFollowing 
+          ? prev.filter(id => id !== profileId) 
+          : [...prev, profileId]
+      );
+      
+      toast({
+        title: isFollowing ? "Unfollowed" : "Following",
+        description: isFollowing 
+          ? `You have unfollowed this user` 
+          : `You are now following this user`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Error toggling follow status:', error);
+      throw error;
+    }
   };
 
   return (
     <ProfileContext.Provider 
       value={{ 
         mainProfile, 
-        demoProfiles, 
-        featuredVideos, 
-        demoVideos, 
         updateMainProfile,
         toggleFollowProfile,
-        followedProfiles
+        followedProfiles,
+        getUserProfile
       }}
     >
       {children}

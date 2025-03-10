@@ -8,6 +8,9 @@ import { ProfileProvider } from "./contexts/ProfileContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
+import ResetPassword from "./pages/ResetPassword";
+import UpdatePassword from "./pages/UpdatePassword";
 import Dashboard from "./pages/Dashboard";
 import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
@@ -16,7 +19,6 @@ import Create from "./pages/Create";
 import LiveStream from "./pages/LiveStream";
 import Podcast from "./pages/Podcast";
 import Broadcast from "./pages/Broadcast";
-import SignUp from "./pages/SignUp";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -33,6 +35,8 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/update-password" element={<UpdatePassword />} />
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />

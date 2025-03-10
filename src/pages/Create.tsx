@@ -10,7 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { Video, Mic, Radio, Settings, Upload, DollarSign } from 'lucide-react';
+import { Video, Mic, Radio, Settings, Upload, DollarSign, Link2 } from 'lucide-react';
+import IntegratedStream from '@/components/IntegratedStream';
 
 const Create = () => {
   const { toast } = useToast();
@@ -51,10 +52,14 @@ const Create = () => {
             <p className="text-gray-600 mb-8">Choose how you want to share your content with your audience</p>
             
             <Tabs defaultValue="livestream" onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-3 mb-8">
+              <TabsList className="grid grid-cols-4 mb-8">
                 <TabsTrigger value="livestream">
                   <Video className="h-4 w-4 mr-2" />
                   Live Streaming
+                </TabsTrigger>
+                <TabsTrigger value="integration">
+                  <Link2 className="h-4 w-4 mr-2" />
+                  External Integration
                 </TabsTrigger>
                 <TabsTrigger value="podcast">
                   <Mic className="h-4 w-4 mr-2" />
@@ -129,6 +134,11 @@ const Create = () => {
                     </Button>
                   </CardFooter>
                 </Card>
+              </TabsContent>
+              
+              {/* External Integration Tab */}
+              <TabsContent value="integration">
+                <IntegratedStream />
               </TabsContent>
               
               {/* Podcasting Tab */}
