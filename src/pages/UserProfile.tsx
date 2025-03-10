@@ -1,332 +1,260 @@
 
 import React, { useEffect, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, Share2, MessageSquare, Bell, BellOff, 
-  Heart, Video, Radio, Headphones, Users, BookOpen
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useParams, Link } from 'react-router-dom';
+import { useProfile } from '@/contexts/ProfileContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/components/ui/use-toast';
-import { Separator } from '@/components/ui/separator';
+import { Card } from '@/components/ui/card';
+import { UserPlus, Check, Link as LinkIcon, MapPin, Calendar, Mail } from 'lucide-react';
 import VideoCard from '@/components/VideoCard';
-import ProfileCard from '@/components/ProfileCard';
-import { useProfile, ProfileType, VideoType } from '@/contexts/ProfileContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
+
+interface ProfileData {
+  id: string;
+  name: string;
+  role: string;
+  bio: string;
+  avatar: string;
+  coverImage?: string;
+  organization?: string;
+  tags: string[];
+  featured?: boolean;
+}
+
+interface VideoData {
+  id: string;
+  title: string;
+  thumbnail: string;
+  views: number;
+  duration: string;
+  createdAt: string;
+  profileId: string;
+}
 
 const UserProfile = () => {
   const { profileId } = useParams<{ profileId: string }>();
-  const navigate = useNavigate();
+  const { followedProfiles, toggleFollowProfile } = useProfile();
   const { toast } = useToast();
-  const { mainProfile, demoProfiles, demoVideos, followedProfiles, toggleFollowProfile } = useProfile();
-  const [userProfile, setUserProfile] = useState<ProfileType | null>(null);
-  const [userVideos, setUserVideos] = useState<VideoType[]>([]);
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [isSubscribed, setIsSubscribed] = useState(false);
-
+  
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [videos, setVideos] = useState<VideoData[]>([]);
+  const [loading, setLoading] = useState(true);
+  
   useEffect(() => {
-    // Find the profile based on the URL parameter
-    if (profileId === mainProfile.id) {
-      setUserProfile(mainProfile);
-      navigate('/dashboard');
-      return;
-    }
+    const fetchProfileData = async () => {
+      setLoading(true);
+      try {
+        // In a real app, this would fetch data from your API
+        // For now, let's create a placeholder profile
+        const mockProfile: ProfileData = {
+          id: profileId || '1',
+          name: 'TiMBLive Creator',
+          role: 'Video Creator',
+          bio: 'Creating amazing content on TiMBLive platform. Specializing in technology and future trends.',
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1000&auto=format&fit=crop',
+          coverImage: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070&auto=format&fit=crop',
+          organization: 'TiMBLive Studios',
+          tags: ['Technology', 'Future', 'AI', 'Design'],
+        };
+        
+        const mockVideos: VideoData[] = [
+          {
+            id: '1',
+            title: 'The Future of Digital Technology',
+            thumbnail: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=500&auto=format&fit=crop',
+            views: 12500,
+            duration: '15:24',
+            createdAt: '2023-10-15',
+            profileId: profileId || '1',
+          },
+          {
+            id: '2',
+            title: 'How AI is Changing Our World',
+            thumbnail: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=500&auto=format&fit=crop',
+            views: 8700,
+            duration: '12:18',
+            createdAt: '2023-09-28',
+            profileId: profileId || '1',
+          },
+          {
+            id: '3',
+            title: 'Future Tech Systems Overview',
+            thumbnail: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=500&auto=format&fit=crop',
+            views: 5300,
+            duration: '08:42',
+            createdAt: '2023-09-05',
+            profileId: profileId || '1',
+          },
+        ];
+        
+        setProfile(mockProfile);
+        setVideos(mockVideos);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    const profile = demoProfiles.find(p => p.id === profileId);
-    if (profile) {
-      setUserProfile(profile);
-      
-      // Get videos from this creator
-      const videos = demoVideos.filter(v => v.creator.id === profileId);
-      setUserVideos(videos);
-      
-      // Check if following
-      setIsFollowing(followedProfiles.includes(profileId));
-    } else {
-      // Profile not found
-      toast({
-        title: "Profile not found",
-        description: "The requested profile doesn't exist or has been removed.",
-        variant: "destructive",
-      });
-      navigate('/dashboard');
-    }
-  }, [profileId, mainProfile, demoProfiles, demoVideos, followedProfiles, navigate, toast]);
-
-  const handleToggleFollow = () => {
-    if (userProfile) {
-      toggleFollowProfile(userProfile.id);
-      setIsFollowing(!isFollowing);
-      
-      toast({
-        title: isFollowing ? "Unfollowed" : "Following",
-        description: isFollowing 
-          ? `You have unfollowed ${userProfile.name}` 
-          : `You are now following ${userProfile.name}`,
-        variant: "default",
-      });
-    }
-  };
-
-  const handleToggleSubscribe = () => {
-    setIsSubscribed(!isSubscribed);
-    
-    toast({
-      title: isSubscribed ? "Unsubscribed" : "Subscribed",
-      description: isSubscribed 
-        ? "You'll no longer receive notifications for new content" 
-        : "You'll be notified when new content is published",
-      variant: "default",
-    });
-  };
-
-  const handleShare = () => {
-    toast({
-      title: "Share link copied",
-      description: "Profile link has been copied to your clipboard",
-      variant: "default",
-    });
-  };
-
-  if (!userProfile) {
+    fetchProfileData();
+  }, [profileId]);
+  
+  if (loading || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-xl text-gray-500">Loading profile...</div>
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a1f]">
+        <div className="animate-pulse text-[#0077FF]">Loading profile...</div>
       </div>
     );
   }
-
+  
+  const isFollowing = followedProfiles.includes(profile.id);
+  
+  const handleFollow = () => {
+    toggleFollowProfile(profile.id);
+    
+    toast({
+      title: isFollowing ? "Unfollowed" : "Following",
+      description: isFollowing 
+        ? `You have unfollowed ${profile.name}` 
+        : `You are now following ${profile.name}`,
+      variant: "default",
+    });
+  };
+  
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header with back button */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => navigate('/dashboard')}
-            className="text-gray-600"
-          >
-            <ArrowLeft size={20} />
-          </Button>
-          <h1 className="text-xl font-semibold">{userProfile.name}</h1>
-        </div>
+    <div className="min-h-screen bg-[#0a0a1f] text-white">
+      {/* Cover Image */}
+      <div 
+        className="w-full h-64 md:h-80 bg-cover bg-center relative"
+        style={{ 
+          backgroundImage: profile.coverImage 
+            ? `url(${profile.coverImage})` 
+            : 'url(/lovable-uploads/f8d29536-0a5b-4692-b13a-ba8e4d24e87b.png)'
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0a0a1f]"></div>
       </div>
-
-      <div className="container mx-auto px-4 py-6">
-        {/* Profile Header */}
-        <div className="bg-white rounded-xl overflow-hidden shadow-sm mb-6">
-          {/* Cover image */}
-          <div className="h-48 bg-gray-200 relative">
-            {userProfile.coverImage ? (
-              <img 
-                src={userProfile.coverImage || "https://images.unsplash.com/photo-1518770660439-4636190af475"} 
-                alt="Cover" 
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-r from-timbl-100 to-timbl-300"></div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
-          </div>
-          
-          {/* Profile info */}
-          <div className="relative px-6 pb-6 -mt-16">
-            <Avatar className="h-32 w-32 border-4 border-white rounded-full">
-              <AvatarImage src={userProfile.avatar} alt={userProfile.name} />
-              <AvatarFallback className="text-2xl">{userProfile.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            
-            <div className="mt-4 md:flex md:items-end md:justify-between">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold">{userProfile.name}</h1>
-                <p className="text-gray-600">{userProfile.role}</p>
-                {userProfile.organization && (
-                  <p className="text-gray-600 text-sm mt-1">{userProfile.organization}</p>
-                )}
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {userProfile.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="bg-timbl-100 text-timbl">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <div className="mt-4 md:mt-0 flex gap-3">
+      
+      <div className="container mx-auto px-4 -mt-20 relative z-10">
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Profile Info Card */}
+          <div className="md:w-1/3">
+            <Card className="bg-[#0a0a1f]/80 backdrop-blur-xl border border-[#0077FF]/30 text-white shadow-lg shadow-[#0077FF]/20 p-6">
+              <div className="flex flex-col items-center text-center">
+                <Avatar className="h-24 w-24 border-4 border-[#0077FF] mb-4">
+                  <AvatarImage src={profile.avatar} alt={profile.name} />
+                  <AvatarFallback className="bg-[#151530] text-[#0077FF]">{profile.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                
+                <h1 className="text-2xl font-bold mb-1">{profile.name}</h1>
+                <p className="text-[#33c3f0] mb-3">{profile.role}</p>
+                
                 <Button 
-                  className={isFollowing ? "border-timbl bg-white text-timbl hover:bg-gray-50" : "bg-timbl"}
-                  variant={isFollowing ? "outline" : "default"}
-                  onClick={handleToggleFollow}
+                  onClick={handleFollow} 
+                  className={isFollowing 
+                    ? "bg-transparent border border-[#0077FF] text-[#0077FF] hover:bg-[#0077FF]/10 mb-4 w-full" 
+                    : "bg-[#0077FF] hover:bg-[#33c3f0] text-white mb-4 w-full"
+                  }
                 >
-                  {isFollowing ? "Following" : "Follow"}
+                  {isFollowing 
+                    ? <><Check className="mr-2 h-4 w-4" /> Following</> 
+                    : <><UserPlus className="mr-2 h-4 w-4" /> Follow</>
+                  }
                 </Button>
-                <Button 
-                  variant="outline"
-                  className="border-gray-300"
-                  onClick={handleToggleSubscribe}
-                >
-                  {isSubscribed ? <BellOff size={18} className="mr-2" /> : <Bell size={18} className="mr-2" />}
-                  {isSubscribed ? "Subscribed" : "Subscribe"}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="border-gray-300"
-                  onClick={handleShare}
-                >
-                  <Share2 size={18} />
-                </Button>
-              </div>
-            </div>
-            
-            <p className="mt-6 text-gray-700">{userProfile.bio}</p>
-            
-            <div className="mt-6 flex gap-6">
-              <div className="flex items-center gap-1 text-gray-600">
-                <Users size={18} />
-                <span className="text-sm">{userProfile.followers || 0} followers</span>
-              </div>
-              <div className="flex items-center gap-1 text-gray-600">
-                <Heart size={18} />
-                <span className="text-sm">{Math.floor(Math.random() * 500) + 100} likes</span>
-              </div>
-              <div className="flex items-center gap-1 text-gray-600">
-                <Video size={18} />
-                <span className="text-sm">{userVideos.length} videos</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Content Tabs */}
-        <Tabs defaultValue="videos" className="mb-8">
-          <TabsList className="grid grid-cols-5 mb-6">
-            <TabsTrigger value="videos">Videos</TabsTrigger>
-            <TabsTrigger value="live">Live</TabsTrigger>
-            <TabsTrigger value="podcasts">Podcasts</TabsTrigger>
-            <TabsTrigger value="playlists">Playlists</TabsTrigger>
-            <TabsTrigger value="about">About</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="videos">
-            {userVideos.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {userVideos.map((video) => (
-                  <VideoCard key={video.id} video={video} />
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white rounded-xl p-8 text-center">
-                <Video className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No videos yet</h3>
-                <p className="text-gray-600">This creator hasn't uploaded any videos yet.</p>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="live">
-            <div className="bg-white rounded-xl p-8 text-center">
-              <Radio className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Not live right now</h3>
-              <p className="text-gray-600 mb-6">{userProfile.name} is not streaming at the moment.</p>
-              <Button 
-                variant="outline" 
-                className="border-timbl text-timbl"
-                onClick={() => setIsSubscribed(true)}
-              >
-                <Bell size={18} className="mr-2" />
-                Get notified when live
-              </Button>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="podcasts">
-            <div className="bg-white rounded-xl p-8 text-center">
-              <Headphones className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No podcasts yet</h3>
-              <p className="text-gray-600">{userProfile.name} hasn't uploaded any podcasts yet.</p>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="playlists">
-            <div className="bg-white rounded-xl p-8 text-center">
-              <BookOpen className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No playlists yet</h3>
-              <p className="text-gray-600">{userProfile.name} hasn't created any playlists yet.</p>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="about">
-            <div className="bg-white rounded-xl p-6">
-              <h3 className="text-xl font-semibold mb-4">About {userProfile.name}</h3>
-              
-              <div className="space-y-6">
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Bio</h4>
-                  <p className="text-gray-700">{userProfile.bio}</p>
-                </div>
                 
-                <Separator />
-                
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Details</h4>
-                  <dl className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">Role</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{userProfile.role}</dd>
+                <div className="w-full border-t border-[#0077FF]/30 pt-4 mt-2">
+                  <p className="text-gray-300 mb-4">{profile.bio}</p>
+                  
+                  {profile.organization && (
+                    <div className="flex items-center justify-center text-gray-400 mb-2">
+                      <MapPin className="h-4 w-4 mr-2" />
+                      <span>{profile.organization}</span>
                     </div>
-                    {userProfile.organization && (
-                      <div className="sm:col-span-1">
-                        <dt className="text-sm font-medium text-gray-500">Organization</dt>
-                        <dd className="mt-1 text-sm text-gray-900">{userProfile.organization}</dd>
-                      </div>
-                    )}
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">Joined</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{userProfile.joined || "2022"}</dd>
-                    </div>
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">Content focus</dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        {userProfile.tags.join(", ")}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-                
-                <Separator />
-                
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Connect</h4>
-                  <div className="flex gap-3">
-                    <Button className="bg-timbl">
-                      <MessageSquare size={18} className="mr-2" />
-                      Send Message
-                    </Button>
-                    <Button variant="outline">
-                      <Share2 size={18} className="mr-2" />
-                      Share Profile
-                    </Button>
+                  )}
+                  
+                  <div className="flex items-center justify-center text-gray-400 mb-4">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    <span>Joined September 2023</span>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2 justify-center mt-4">
+                    {profile.tags.map((tag) => (
+                      <Badge key={tag} className="bg-[#151530] text-[#33c3f0] border border-[#0077FF]/30">
+                        {tag}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
               </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-        
-        {/* Similar Creators */}
-        <section className="mt-12">
-          <h2 className="text-xl font-bold mb-6">Similar Creators</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {demoProfiles
-              .filter(p => p.id !== profileId)
-              .slice(0, 3)
-              .map((profile) => (
-                <ProfileCard key={profile.id} profile={profile} />
-              ))}
+            </Card>
           </div>
-        </section>
+          
+          {/* Content Tabs */}
+          <div className="md:w-2/3">
+            <Tabs defaultValue="videos" className="w-full">
+              <TabsList className="bg-[#151530] border border-[#0077FF]/30 mb-6">
+                <TabsTrigger value="videos" className="data-[state=active]:bg-[#0077FF] data-[state=active]:text-white">
+                  Videos
+                </TabsTrigger>
+                <TabsTrigger value="livestreams" className="data-[state=active]:bg-[#0077FF] data-[state=active]:text-white">
+                  Livestreams
+                </TabsTrigger>
+                <TabsTrigger value="about" className="data-[state=active]:bg-[#0077FF] data-[state=active]:text-white">
+                  About
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="videos" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {videos.map((video) => (
+                    <VideoCard 
+                      key={video.id}
+                      id={video.id}
+                      title={video.title}
+                      thumbnail={video.thumbnail}
+                      profileName={profile.name}
+                      profileAvatar={profile.avatar}
+                      views={video.views}
+                      timeAgo={video.createdAt}
+                      duration={video.duration}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="livestreams">
+                <div className="bg-[#0a0a1f]/80 backdrop-blur-xl border border-[#0077FF]/30 rounded-lg p-8 text-center">
+                  <p className="text-gray-400">No active livestreams at the moment.</p>
+                  <Button className="mt-4 bg-[#0077FF] hover:bg-[#33c3f0] text-white">
+                    Notify me when live
+                  </Button>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="about">
+                <Card className="bg-[#0a0a1f]/80 backdrop-blur-xl border border-[#0077FF]/30 text-white shadow-lg shadow-[#0077FF]/20 p-6">
+                  <h2 className="text-xl font-bold mb-4">About {profile.name}</h2>
+                  <p className="text-gray-300 mb-6">{profile.bio}</p>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center text-gray-300">
+                      <Mail className="h-5 w-5 mr-3 text-[#0077FF]" />
+                      <span>contact@timblive.example.com</span>
+                    </div>
+                    
+                    <div className="flex items-center text-gray-300">
+                      <LinkIcon className="h-5 w-5 mr-3 text-[#0077FF]" />
+                      <a href="#" className="hover:text-[#33c3f0]">timblive.example.com</a>
+                    </div>
+                  </div>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
       </div>
     </div>
   );
