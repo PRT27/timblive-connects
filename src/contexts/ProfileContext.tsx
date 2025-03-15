@@ -1,10 +1,8 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 
-// Define types for profiles and content
 export interface ProfileType {
   id: string;
   name: string;
@@ -31,7 +29,6 @@ export interface VideoType {
   videoUrl: string;
 }
 
-// Create interface for the context values
 interface ProfileContextType {
   mainProfile: ProfileType;
   updateMainProfile: (updates: Partial<ProfileType>) => Promise<void>;
@@ -40,10 +37,8 @@ interface ProfileContextType {
   getUserProfile: (userId: string) => Promise<ProfileType | null>;
 }
 
-// Create the context
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
-// Create a provider component
 interface ProfileProviderProps {
   children: ReactNode;
 }
@@ -53,15 +48,19 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
   const { toast } = useToast();
   const [mainProfile, setMainProfile] = useState<ProfileType>({
     id: "",
-    name: "",
-    role: "",
-    bio: "",
-    avatar: "",
-    tags: [],
+    name: "Percy Thwala",
+    role: "Founder & Developer",
+    bio: "Creating innovative tech solutions with a focus on accessibility and assistive technology.",
+    avatar: "/lovable-uploads/6f518798-3d69-4e70-863a-8f2642f09e4e.png",
+    tags: ["Assistive Technology", "Accessibility", "Innovation"],
+    organization: "Khanyasakhe Cleaning and Trading Enterprise",
+    followers: 87,
+    following: 42,
+    joined: "September 2023",
+    coverImage: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070&auto=format&fit=crop",
   });
   const [followedProfiles, setFollowedProfiles] = useState<string[]>([]);
 
-  // Fetch the current user's profile
   useEffect(() => {
     if (!user) return;
     
@@ -104,7 +103,6 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
     fetchProfile();
   }, [user]);
 
-  // Get a user profile by ID
   const getUserProfile = async (userId: string): Promise<ProfileType | null> => {
     try {
       const { data, error } = await supabase
@@ -144,12 +142,10 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
     }
   };
 
-  // Update the main profile
   const updateMainProfile = async (updates: Partial<ProfileType>): Promise<void> => {
     if (!user) return;
     
     try {
-      // Convert from our frontend model to DB model
       const dbUpdates: any = {};
       
       if (updates.name) dbUpdates.full_name = updates.name;
@@ -176,7 +172,6 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
         throw error;
       }
       
-      // Update local state
       setMainProfile(prev => ({ ...prev, ...updates }));
       
       toast({
@@ -190,15 +185,12 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
     }
   };
 
-  // Toggle following a profile
   const toggleFollowProfile = async (profileId: string): Promise<void> => {
     if (!user || profileId === user.id) return;
     
     const isFollowing = followedProfiles.includes(profileId);
     
     try {
-      // TODO: In a real app, you would implement the follow/unfollow logic in the database
-      // For now, we'll just update the local state
       setFollowedProfiles(prev => 
         isFollowing 
           ? prev.filter(id => id !== profileId) 
@@ -233,7 +225,6 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
   );
 };
 
-// Custom hook to use the profile context
 export const useProfile = () => {
   const context = useContext(ProfileContext);
   if (context === undefined) {

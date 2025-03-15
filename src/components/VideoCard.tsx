@@ -1,9 +1,11 @@
 
 import React from 'react';
-import { Play, Clock, Eye, Radio, Mic } from 'lucide-react';
+import { Play, Clock, Eye, Radio, Mic, Music, Tv, Video } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 
 interface Creator {
   id: string;
@@ -20,8 +22,9 @@ export interface VideoProps {
   date: string;
   creator: Creator;
   videoUrl: string;
-  contentType?: 'video' | 'podcast' | 'broadcast' | 'live';
+  contentType?: 'video' | 'podcast' | 'broadcast' | 'live' | 'news' | 'radio' | 'music';
   isLive?: boolean;
+  category?: string;
 }
 
 export interface VideoCardProps {
@@ -42,6 +45,7 @@ export interface LegacyVideoCardProps {
 
 const VideoCard = (props: VideoCardProps | LegacyVideoCardProps) => {
   const [showEmbed, setShowEmbed] = React.useState(false);
+  const { toast } = useToast();
   
   // Determine if we're using the legacy props or the newer video object prop
   const isLegacyProps = 'id' in props;
@@ -73,11 +77,32 @@ const VideoCard = (props: VideoCardProps | LegacyVideoCardProps) => {
         return <Mic className="h-5 w-5 text-timbl fill-current" />;
       case 'broadcast':
         return <Radio className="h-5 w-5 text-timbl fill-current" />;
+      case 'news':
+        return <Tv className="h-5 w-5 text-timbl fill-current" />;
+      case 'radio':
+        return <Radio className="h-5 w-5 text-timbl fill-current" />;
+      case 'music':
+        return <Music className="h-5 w-5 text-timbl fill-current" />;
       case 'live':
+        return <Video className="h-5 w-5 text-timbl fill-current" />;
       case 'video':
       default:
         return <Play className="h-5 w-5 text-timbl fill-current ml-1" />;
     }
+  };
+
+  const handleShareContent = () => {
+    // Create a share URL for this content
+    const shareUrl = `${window.location.origin}/share/${videoData.contentType}/${videoData.id}`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      toast({
+        title: "Link copied!",
+        description: "Share link has been copied to clipboard",
+        variant: "default",
+      });
+    });
   };
 
   return (
@@ -113,6 +138,12 @@ const VideoCard = (props: VideoCardProps | LegacyVideoCardProps) => {
               <Badge className="absolute top-2 left-2 bg-red-500 text-white">LIVE</Badge>
             ) : null}
             
+            {videoData.category && (
+              <Badge className="absolute top-2 right-2 bg-[#0077FF]/80 text-white">
+                {videoData.category}
+              </Badge>
+            )}
+            
             <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
               {videoData.duration}
             </div>
@@ -138,9 +169,20 @@ const VideoCard = (props: VideoCardProps | LegacyVideoCardProps) => {
           </div>
         </div>
         
-        <div className="flex items-center mt-2 text-xs text-gray-500">
-          <Clock className="h-3 w-3 mr-1" />
-          <span>{videoData.date}</span>
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center text-xs text-gray-500">
+            <Clock className="h-3 w-3 mr-1" />
+            <span>{videoData.date}</span>
+          </div>
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-6 px-2 text-xs text-gray-500 hover:text-[#0077FF]"
+            onClick={handleShareContent}
+          >
+            Share
+          </Button>
         </div>
       </CardContent>
     </Card>

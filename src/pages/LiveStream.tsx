@@ -289,18 +289,25 @@ const LiveStream = () => {
                     }}
                   ></video>
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-white">
-                    <div className="text-center">
-                      <div className="mb-4">
-                        <svg className="w-16 h-16 mx-auto animate-pulse" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M10 8L16 12L10 16V8Z" fill="currentColor"/>
-                        </svg>
-                      </div>
-                      <p className="text-lg font-medium">{livestream.title}</p>
-                      <p className="text-sm text-gray-300">Live Stream - {formattedDate}</p>
-                    </div>
-                  </div>
+                  <DeviceStreamSetup 
+                    streamId={streamId || 'default'} 
+                    onStreamStart={() => {
+                      setStreaming(true);
+                      toast({
+                        title: "Live Stream Started",
+                        description: "Your audience can now see you",
+                        variant: "default",
+                      });
+                    }}
+                    onStreamEnd={() => {
+                      setStreaming(false);
+                      toast({
+                        title: "Live Stream Ended",
+                        description: "Your stream has ended",
+                        variant: "default",
+                      });
+                    }}
+                  />
                 )}
                 
                 {/* Camera Controls - Only show when camera is enabled or streaming */}
@@ -327,7 +334,7 @@ const LiveStream = () => {
                 )}
                 
                 {/* Stream Controls - Only show when not streaming */}
-                {!streaming && (
+                {!streaming && cameraEnabled && (
                   <div className="absolute bottom-4 left-0 right-0 flex justify-center">
                     <Button 
                       className="bg-red-600 hover:bg-red-700 text-white"
@@ -339,41 +346,43 @@ const LiveStream = () => {
                 )}
                 
                 {/* Video Controls */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center text-white space-x-4">
-                      <div className="flex items-center">
-                        <Users className="h-5 w-5 mr-2" />
-                        <span>{livestream.viewers.toLocaleString()}</span>
+                {cameraEnabled && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center text-white space-x-4">
+                        <div className="flex items-center">
+                          <Users className="h-5 w-5 mr-2" />
+                          <span>{livestream.viewers.toLocaleString()}</span>
+                        </div>
+                        <div className="h-4 w-px bg-white/20"></div>
+                        <div className="flex items-center">
+                          <Heart className="h-5 w-5 mr-2" />
+                          <span>{livestream.likes.toLocaleString()}</span>
+                        </div>
                       </div>
-                      <div className="h-4 w-px bg-white/20"></div>
-                      <div className="flex items-center">
-                        <Heart className="h-5 w-5 mr-2" />
-                        <span>{livestream.likes.toLocaleString()}</span>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      {streaming && (
-                        <Button 
-                          variant="destructive" 
-                          size="sm" 
-                          onClick={stopStreaming}
-                        >
-                          End Stream
+                      <div className="flex space-x-2">
+                        {streaming && (
+                          <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            onClick={stopStreaming}
+                          >
+                            End Stream
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="sm" className="text-white">
+                          <Settings className="h-5 w-5" />
                         </Button>
-                      )}
-                      <Button variant="ghost" size="sm" className="text-white">
-                        <Settings className="h-5 w-5" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-white">
-                        <PictureInPicture className="h-5 w-5" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-white">
-                        <MaximizeIcon className="h-5 w-5" />
-                      </Button>
+                        <Button variant="ghost" size="sm" className="text-white">
+                          <PictureInPicture className="h-5 w-5" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-white">
+                          <MaximizeIcon className="h-5 w-5" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
               
               {/* Stream Info */}
