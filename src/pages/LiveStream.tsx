@@ -9,9 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { useProfile } from '@/contexts/ProfileContext';
+import DeviceStreamSetup from '@/components/DeviceStreamSetup';
 import { Heart, MessageSquare, Share2, Gift, Users, Settings, MaximizeIcon, PictureInPicture, Camera, MicOff, Mic, CameraOff, MoreVertical } from 'lucide-react';
 
 // Sample livestream data - updated with Percy's content focus

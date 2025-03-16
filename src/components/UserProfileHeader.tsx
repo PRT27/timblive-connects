@@ -1,107 +1,143 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { UserPlus, Check, MapPin, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, Mail, MapPin, Users } from 'lucide-react';
+import { ProfileType } from '@/types/profile';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useToast } from '@/components/ui/use-toast';
-import { ProfileType } from '@/types/profile';
 
 interface UserProfileHeaderProps {
   profile: ProfileType;
+  joinedDate?: string; // Make joinedDate optional
+  followersCount?: number; // Add followersCount as optional
+  isOwnProfile?: boolean;
+  onEditProfile?: () => void;
 }
 
-const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({ profile }) => {
-  const { followedProfiles, toggleFollowProfile } = useProfile();
+const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
+  profile,
+  joinedDate = 'January 2023', // Default value if not provided
+  followersCount = 0, // Default value if not provided
+  isOwnProfile = false,
+  onEditProfile
+}) => {
+  const { toggleFollowProfile, followedProfiles } = useProfile();
   const { toast } = useToast();
   
-  const isFollowing = followedProfiles.includes(profile.id);
-  
-  const handleFollow = () => {
-    toggleFollowProfile(profile.id);
-    
-    toast({
-      title: isFollowing ? "Unfollowed" : "Following",
-      description: isFollowing 
-        ? `You have unfollowed ${profile.name}` 
-        : `You are now following ${profile.name}`,
-      variant: "default",
+  // Format date in a more readable format
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   };
   
+  const isFollowing = profile.id ? followedProfiles.includes(profile.id) : false;
+  
+  const handleFollowToggle = () => {
+    if (profile.id) {
+      toggleFollowProfile(profile.id);
+      
+      toast({
+        title: isFollowing ? "Unfollowed" : "Following",
+        description: isFollowing 
+          ? `You have unfollowed ${profile.displayName || profile.username}` 
+          : `You are now following ${profile.displayName || profile.username}`,
+        variant: "default",
+      });
+    }
+  };
+
   return (
-    <>
-      {/* Cover Image */}
-      <div 
-        className="w-full h-64 md:h-80 bg-cover bg-center relative"
-        style={{ 
-          backgroundImage: profile.coverImage 
-            ? `url(${profile.coverImage})` 
-            : 'url(/lovable-uploads/f8d29536-0a5b-4692-b13a-ba8e4d24e87b.png)'
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0a0a1f]"></div>
+    <div className="relative mb-8">
+      {/* Banner image */}
+      <div className="h-48 w-full bg-gradient-to-r from-[#0a0a2e] to-[#0d0d4d] rounded-lg overflow-hidden">
+        {profile.bannerUrl && (
+          <img 
+            src={profile.bannerUrl} 
+            alt={`${profile.displayName || profile.username}'s banner`}
+            className="w-full h-full object-cover"
+          />
+        )}
       </div>
       
-      <div className="container mx-auto px-4 -mt-20 relative z-10">
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Profile Info Card */}
-          <div className="md:w-1/3">
-            <Card className="bg-[#0a0a1f]/80 backdrop-blur-xl border border-[#0077FF]/30 text-white shadow-lg shadow-[#0077FF]/20 p-6">
-              <div className="flex flex-col items-center text-center">
-                <Avatar className="h-24 w-24 border-4 border-[#0077FF] mb-4">
-                  <AvatarImage src={profile.avatar} alt={profile.name} />
-                  <AvatarFallback className="bg-[#151530] text-[#0077FF]">{profile.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                
-                <h1 className="text-2xl font-bold mb-1">{profile.name}</h1>
-                <p className="text-[#33c3f0] mb-3">{profile.role}</p>
-                
-                <Button 
-                  onClick={handleFollow} 
-                  className={isFollowing 
-                    ? "bg-transparent border border-[#0077FF] text-[#0077FF] hover:bg-[#0077FF]/10 mb-4 w-full" 
-                    : "bg-[#0077FF] hover:bg-[#33c3f0] text-white mb-4 w-full"
-                  }
-                >
-                  {isFollowing 
-                    ? <><Check className="mr-2 h-4 w-4" /> Following</> 
-                    : <><UserPlus className="mr-2 h-4 w-4" /> Follow</>
-                  }
-                </Button>
-                
-                <div className="w-full border-t border-[#0077FF]/30 pt-4 mt-2">
-                  <p className="text-gray-300 mb-4">{profile.bio}</p>
-                  
-                  {profile.organization && (
-                    <div className="flex items-center justify-center text-gray-400 mb-2">
-                      <MapPin className="h-4 w-4 mr-2" />
-                      <span>{profile.organization}</span>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center justify-center text-gray-400 mb-4">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    <span>Joined {profile.joined || 'September 2023'}</span>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2 justify-center mt-4">
-                    {profile.tags.map((tag) => (
-                      <Badge key={tag} className="bg-[#151530] text-[#33c3f0] border border-[#0077FF]/30">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
+      {/* Profile information */}
+      <div className="relative px-4 sm:px-6 -mt-16">
+        <div className="flex flex-col sm:flex-row items-start sm:items-end space-y-4 sm:space-y-0 sm:space-x-4">
+          {/* Avatar */}
+          <Avatar className="h-32 w-32 rounded-lg border-4 border-white bg-white shadow-lg">
+            <AvatarImage src={profile.avatarUrl} />
+            <AvatarFallback className="text-3xl">
+              {profile.displayName?.charAt(0) || profile.username?.charAt(0) || 'U'}
+            </AvatarFallback>
+          </Avatar>
+          
+          <div className="flex-1">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h1 className="text-2xl font-bold">{profile.displayName || profile.username}</h1>
+                <p className="text-gray-600">@{profile.username}</p>
               </div>
-            </Card>
+              
+              <div className="mt-4 sm:mt-0">
+                {isOwnProfile ? (
+                  <Button onClick={onEditProfile} className="bg-timbl text-white hover:bg-timbl/90">
+                    Edit Profile
+                  </Button>
+                ) : (
+                  <Button
+                    variant={isFollowing ? "outline" : "default"}
+                    className={isFollowing ? "border-timbl text-timbl" : "bg-timbl text-white hover:bg-timbl/90"}
+                    onClick={handleFollowToggle}
+                  >
+                    {isFollowing ? 'Following' : 'Follow'}
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            <div className="mt-4 flex flex-wrap gap-4">
+              {profile.role && (
+                <Badge variant="outline" className="bg-gray-100">
+                  {profile.role}
+                </Badge>
+              )}
+              
+              <div className="flex items-center text-gray-600 text-sm">
+                <Users className="h-4 w-4 mr-1" />
+                <span>{followersCount} followers</span>
+              </div>
+              
+              {profile.location && (
+                <div className="flex items-center text-gray-600 text-sm">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  <span>{profile.location}</span>
+                </div>
+              )}
+              
+              <div className="flex items-center text-gray-600 text-sm">
+                <Calendar className="h-4 w-4 mr-1" />
+                <span>Joined {joinedDate}</span>
+              </div>
+            </div>
+            
+            {profile.email && (
+              <div className="mt-2 flex items-center text-gray-600 text-sm">
+                <Mail className="h-4 w-4 mr-1" />
+                <span>{profile.email}</span>
+              </div>
+            )}
+            
+            {profile.bio && (
+              <p className="mt-4 text-gray-700">{profile.bio}</p>
+            )}
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
