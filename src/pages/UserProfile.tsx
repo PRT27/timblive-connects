@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -8,14 +8,24 @@ import UserProfileHeader from '@/components/UserProfileHeader';
 import ProfileEditor from '@/components/ProfileEditor';
 import VideoCard from '@/components/VideoCard';
 import { useProfile } from '@/contexts/ProfileContext';
+import { ProfileType } from '@/types/profile';
 
 const UserProfile = () => {
   const { username } = useParams<{ username: string }>();
-  const { availableProfiles } = useProfile();
+  const { mainProfile, getUserProfile } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
+  const [profile, setProfile] = useState<ProfileType | null>(null);
   
-  // Find the profile by username
-  const profile = availableProfiles.find(p => p.username === username);
+  // Use the mainProfile as a fallback
+  useEffect(() => {
+    const loadProfile = async () => {
+      // In a real implementation, we would fetch the profile based on username
+      // For now, just use the mainProfile as a placeholder
+      setProfile(mainProfile);
+    };
+    
+    loadProfile();
+  }, [username, mainProfile]);
   
   if (!profile) {
     return (
@@ -30,7 +40,7 @@ const UserProfile = () => {
     );
   }
   
-  const isOwnProfile = profile.id === '1'; // Hardcoded for demo; in a real app, this would compare with the logged-in user's ID
+  const isOwnProfile = true; // In a real app, compare with the logged-in user's ID
   
   // Mock data for content
   const userContent = [
@@ -38,34 +48,52 @@ const UserProfile = () => {
       id: '1',
       title: 'Introduction to ARAN-VI Assistant',
       description: 'Learn about the ARAN-VI mobile application for visually impaired users',
-      thumbnailUrl: '/placeholder.svg',
+      thumbnail: '/placeholder.svg',
       duration: '12:34',
       views: 1240,
-      createdAt: '2023-05-15',
+      date: '2023-05-15',
       category: 'Technology',
-      contentType: 'video'
+      contentType: 'video',
+      creator: {
+        id: profile.id,
+        name: profile.name,
+        avatar: profile.avatar
+      },
+      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
     },
     {
       id: '2',
       title: 'Assistive Technologies Today',
       description: 'Discussing the latest innovations in assistive technologies',
-      thumbnailUrl: '/placeholder.svg',
+      thumbnail: '/placeholder.svg',
       duration: '42:10',
       views: 856,
-      createdAt: '2023-06-02',
+      date: '2023-06-02',
       category: 'Education',
-      contentType: 'podcast'
+      contentType: 'podcast',
+      creator: {
+        id: profile.id,
+        name: profile.name,
+        avatar: profile.avatar
+      },
+      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
     },
     {
       id: '3',
       title: 'Live Q&A: Tech Solutions for Disabilities',
       description: 'Join our weekly discussion about tech solutions',
-      thumbnailUrl: '/placeholder.svg',
+      thumbnail: '/placeholder.svg',
       duration: '58:20',
       views: 1532,
-      createdAt: '2023-06-10',
+      date: '2023-06-10',
       category: 'Live',
-      contentType: 'broadcast'
+      contentType: 'broadcast',
+      creator: {
+        id: profile.id,
+        name: profile.name,
+        avatar: profile.avatar
+      },
+      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
     }
   ];
   
@@ -77,7 +105,6 @@ const UserProfile = () => {
         <div className="container px-4 mx-auto">
           {isEditing ? (
             <ProfileEditor 
-              profile={profile} 
               onCancel={() => setIsEditing(false)}
               onSave={() => setIsEditing(false)}
             />
@@ -106,15 +133,19 @@ const UserProfile = () => {
                   .map(video => (
                     <VideoCard
                       key={video.id}
-                      id={video.id}
-                      title={video.title}
-                      description={video.description}
-                      thumbnailUrl={video.thumbnailUrl}
-                      duration={video.duration}
-                      views={video.views}
-                      createdAt={video.createdAt}
-                      category={video.category}
-                      contentType="video"
+                      video={{
+                        id: video.id,
+                        title: video.title,
+                        thumbnail: video.thumbnail,
+                        duration: video.duration,
+                        views: video.views,
+                        date: video.date,
+                        creator: video.creator,
+                        videoUrl: video.videoUrl,
+                        contentType: 'video',
+                        category: video.category,
+                        isLive: false
+                      }}
                     />
                   ))}
               </div>
@@ -127,15 +158,19 @@ const UserProfile = () => {
                   .map(podcast => (
                     <VideoCard
                       key={podcast.id}
-                      id={podcast.id}
-                      title={podcast.title}
-                      description={podcast.description}
-                      thumbnailUrl={podcast.thumbnailUrl}
-                      duration={podcast.duration}
-                      views={podcast.views}
-                      createdAt={podcast.createdAt}
-                      category={podcast.category}
-                      contentType="podcast"
+                      video={{
+                        id: podcast.id,
+                        title: podcast.title,
+                        thumbnail: podcast.thumbnail,
+                        duration: podcast.duration,
+                        views: podcast.views,
+                        date: podcast.date,
+                        creator: podcast.creator,
+                        videoUrl: podcast.videoUrl,
+                        contentType: 'podcast',
+                        category: podcast.category,
+                        isLive: false
+                      }}
                     />
                   ))}
               </div>
@@ -148,15 +183,19 @@ const UserProfile = () => {
                   .map(broadcast => (
                     <VideoCard
                       key={broadcast.id}
-                      id={broadcast.id}
-                      title={broadcast.title}
-                      description={broadcast.description}
-                      thumbnailUrl={broadcast.thumbnailUrl}
-                      duration={broadcast.duration}
-                      views={broadcast.views}
-                      createdAt={broadcast.createdAt}
-                      category={broadcast.category}
-                      contentType="broadcast"
+                      video={{
+                        id: broadcast.id,
+                        title: broadcast.title,
+                        thumbnail: broadcast.thumbnail,
+                        duration: broadcast.duration,
+                        views: broadcast.views,
+                        date: broadcast.date,
+                        creator: broadcast.creator,
+                        videoUrl: broadcast.videoUrl,
+                        contentType: 'broadcast',
+                        category: broadcast.category,
+                        isLive: false
+                      }}
                     />
                   ))}
               </div>
@@ -164,7 +203,7 @@ const UserProfile = () => {
             
             <TabsContent value="about" className="mt-6">
               <div className="bg-white p-6 rounded-lg shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">About {profile.displayName || profile.username}</h2>
+                <h2 className="text-xl font-semibold mb-4">About {profile.displayName || profile.name || profile.username}</h2>
                 
                 <div className="space-y-4">
                   {profile.bio && (

@@ -44,8 +44,8 @@ const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
       toast({
         title: isFollowing ? "Unfollowed" : "Following",
         description: isFollowing 
-          ? `You have unfollowed ${profile.displayName || profile.username}` 
-          : `You are now following ${profile.displayName || profile.username}`,
+          ? `You have unfollowed ${profile.displayName || profile.name || profile.username}` 
+          : `You are now following ${profile.displayName || profile.name || profile.username}`,
         variant: "default",
       });
     }
@@ -55,10 +55,10 @@ const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
     <div className="relative mb-8">
       {/* Banner image */}
       <div className="h-48 w-full bg-gradient-to-r from-[#0a0a2e] to-[#0d0d4d] rounded-lg overflow-hidden">
-        {profile.bannerUrl && (
+        {(profile.bannerUrl || profile.coverImage) && (
           <img 
-            src={profile.bannerUrl} 
-            alt={`${profile.displayName || profile.username}'s banner`}
+            src={profile.bannerUrl || profile.coverImage} 
+            alt={`${profile.displayName || profile.name || profile.username}'s banner`}
             className="w-full h-full object-cover"
           />
         )}
@@ -69,17 +69,17 @@ const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
         <div className="flex flex-col sm:flex-row items-start sm:items-end space-y-4 sm:space-y-0 sm:space-x-4">
           {/* Avatar */}
           <Avatar className="h-32 w-32 rounded-lg border-4 border-white bg-white shadow-lg">
-            <AvatarImage src={profile.avatarUrl} />
+            <AvatarImage src={profile.avatarUrl || profile.avatar} />
             <AvatarFallback className="text-3xl">
-              {profile.displayName?.charAt(0) || profile.username?.charAt(0) || 'U'}
+              {(profile.displayName || profile.name || profile.username || 'U').charAt(0)}
             </AvatarFallback>
           </Avatar>
           
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-2xl font-bold">{profile.displayName || profile.username}</h1>
-                <p className="text-gray-600">@{profile.username}</p>
+                <h1 className="text-2xl font-bold">{profile.displayName || profile.name || profile.username}</h1>
+                <p className="text-gray-600">@{profile.username || profile.id.substring(0, 8)}</p>
               </div>
               
               <div className="mt-4 sm:mt-0">

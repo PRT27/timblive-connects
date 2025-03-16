@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useProfile } from '@/contexts/ProfileContext';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { ProfileType } from '@/types/profile';
 
-const ProfileEditor: React.FC = () => {
+interface ProfileEditorProps {
+  onCancel: () => void;
+  onSave: () => void;
+}
+
+const ProfileEditor: React.FC<ProfileEditorProps> = ({ onCancel, onSave }) => {
   const { mainProfile, updateMainProfile } = useProfile();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -124,6 +130,8 @@ const ProfileEditor: React.FC = () => {
         description: "Your profile changes have been saved.",
         variant: "default",
       });
+      
+      onSave();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -312,7 +320,14 @@ const ProfileEditor: React.FC = () => {
           </div>
         </form>
       </CardContent>
-      <CardFooter className="flex justify-end">
+      <CardFooter className="flex justify-end space-x-2">
+        <Button 
+          variant="outline"
+          onClick={onCancel}
+          className="border-gray-600 text-gray-300 hover:bg-gray-800"
+        >
+          Cancel
+        </Button>
         <Button 
           onClick={handleSubmit}
           disabled={loading}
