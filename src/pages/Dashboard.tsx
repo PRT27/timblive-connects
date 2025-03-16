@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -12,15 +11,31 @@ import ProjectStatus from '@/components/ProjectStatus';
 import StreamIntegration from '@/components/StreamIntegration';
 import { Settings, Users, ChevronRight, Activity, VideoIcon, PlusCircle, MonitorPlay } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useToast } from '@/components/ui/use-toast';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { mainProfile } = useProfile();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('profile');
 
   useEffect(() => {
     document.title = "Dashboard - TiMBLive";
   }, []);
+
+  const handleProfileCancel = () => {
+    toast({
+      title: "Changes discarded",
+      description: "Your profile changes have been discarded.",
+    });
+  };
+
+  const handleProfileSave = () => {
+    toast({
+      title: "Profile updated",
+      description: "Your profile changes have been saved successfully.",
+    });
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0a0a1f] text-white">
@@ -158,7 +173,7 @@ const Dashboard = () => {
 
             {/* Right Column - Content Area */}
             <div className="lg:col-span-3">
-              {activeTab === 'profile' && <ProfileEditor />}
+              {activeTab === 'profile' && <ProfileEditor onCancel={handleProfileCancel} onSave={handleProfileSave} />}
               {activeTab === 'stream' && <StreamIntegration />}
               {activeTab === 'invites' && <InviteSystem />}
               {activeTab === 'status' && <ProjectStatus />}
