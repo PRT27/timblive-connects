@@ -9,7 +9,8 @@ import ProfileEditor from '@/components/ProfileEditor';
 import InviteSystem from '@/components/InviteSystem';
 import ProjectStatus from '@/components/ProjectStatus';
 import StreamIntegration from '@/components/StreamIntegration';
-import { Settings, Users, ChevronRight, Activity, VideoIcon, PlusCircle, MonitorPlay } from 'lucide-react';
+import PromotionalProfiles from '@/components/PromotionalProfiles';
+import { Settings, Users, ChevronRight, Activity, VideoIcon, PlusCircle, MonitorPlay, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -117,6 +118,20 @@ const Dashboard = () => {
                   <Button 
                     variant="ghost" 
                     className={`w-full justify-start rounded-none py-5 px-5 text-left ${
+                      activeTab === 'promoted' 
+                        ? 'bg-[#151530]/60 text-[#33c3f0]' 
+                        : 'text-gray-300 hover:text-white hover:bg-[#151530]/40'
+                    }`}
+                    onClick={() => setActiveTab('promoted')}
+                  >
+                    <Star className={`h-5 w-5 mr-3 ${activeTab === 'promoted' ? 'text-[#33c3f0]' : 'text-gray-500'}`} />
+                    Promoted Streamers
+                    <ChevronRight className="h-4 w-4 ml-auto" />
+                  </Button>
+                  
+                  <Button 
+                    variant="ghost" 
+                    className={`w-full justify-start rounded-none py-5 px-5 text-left ${
                       activeTab === 'invites' 
                         ? 'bg-[#151530]/60 text-[#33c3f0]' 
                         : 'text-gray-300 hover:text-white hover:bg-[#151530]/40'
@@ -175,6 +190,15 @@ const Dashboard = () => {
             <div className="lg:col-span-3">
               {activeTab === 'profile' && <ProfileEditor onCancel={handleProfileCancel} onSave={handleProfileSave} />}
               {activeTab === 'stream' && <StreamIntegration />}
+              {activeTab === 'promoted' && (
+                <div className="bg-[#0a0a1f]/80 backdrop-blur-xl border border-[#0077FF]/30 rounded-lg p-6 shadow-lg shadow-[#0077FF]/20">
+                  <div className="mb-6">
+                    <h2 className="text-xl font-bold text-white mb-2">Manage Promoted Streamers</h2>
+                    <p className="text-gray-400">Add or remove promotional streamers that will be featured on your profile</p>
+                  </div>
+                  <PromotionalProfiles showAssociateButton={true} isOwnProfile={true} />
+                </div>
+              )}
               {activeTab === 'invites' && <InviteSystem />}
               {activeTab === 'status' && <ProjectStatus />}
             </div>

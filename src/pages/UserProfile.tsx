@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -7,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UserProfileHeader from '@/components/UserProfileHeader';
 import ProfileEditor from '@/components/ProfileEditor';
 import VideoCard from '@/components/VideoCard';
+import PromotionalProfiles from '@/components/PromotionalProfiles';
 import { useProfile } from '@/contexts/ProfileContext';
 import { ProfileType } from '@/types/profile';
 
@@ -119,10 +119,11 @@ const UserProfile = () => {
           )}
           
           <Tabs defaultValue="videos" className="mt-8">
-            <TabsList className="w-full sm:w-auto grid grid-cols-4 sm:flex sm:inline-flex">
+            <TabsList className="w-full sm:w-auto grid grid-cols-5 sm:flex sm:inline-flex">
               <TabsTrigger value="videos" className="flex-1 sm:flex-initial">Videos</TabsTrigger>
               <TabsTrigger value="podcasts" className="flex-1 sm:flex-initial">Podcasts</TabsTrigger>
               <TabsTrigger value="broadcasts" className="flex-1 sm:flex-initial">Broadcasts</TabsTrigger>
+              <TabsTrigger value="promoted" className="flex-1 sm:flex-initial">Featured</TabsTrigger>
               <TabsTrigger value="about" className="flex-1 sm:flex-initial">About</TabsTrigger>
             </TabsList>
             
@@ -198,6 +199,16 @@ const UserProfile = () => {
                       }}
                     />
                   ))}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="promoted" className="mt-6">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold">Featured Streamers</h2>
+                  <p className="text-gray-600">Live streaming content from promoted creators</p>
+                </div>
+                <PromotionalProfiles isOwnProfile={isOwnProfile} />
               </div>
             </TabsContent>
             

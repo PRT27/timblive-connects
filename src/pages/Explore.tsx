@@ -1,12 +1,12 @@
-
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProfileCard from '@/components/ProfileCard';
+import PromotionalProfiles from '@/components/PromotionalProfiles';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Music, BookOpen, Tv, Briefcase, MoreHorizontal } from 'lucide-react';
+import { Search, Music, BookOpen, Tv, Briefcase, MoreHorizontal, Star } from 'lucide-react';
 
 // Sample profiles
 const sampleProfiles = [
@@ -127,6 +127,10 @@ const Explore = () => {
               <Tabs defaultValue="all" onValueChange={setActiveCategory}>
                 <TabsList className="mb-6">
                   <TabsTrigger value="all">All</TabsTrigger>
+                  <TabsTrigger value="promoted">
+                    <Star className="h-4 w-4 mr-2" />
+                    Featured Live
+                  </TabsTrigger>
                   {categories.map(category => (
                     <TabsTrigger key={category.id} value={category.id.toLowerCase()}>
                       <category.icon className="h-4 w-4 mr-2" />
@@ -134,6 +138,17 @@ const Explore = () => {
                     </TabsTrigger>
                   ))}
                 </TabsList>
+                
+                {/* Featured Live Streamers Tab */}
+                <TabsContent value="promoted" className="mt-0">
+                  <div className="space-y-6">
+                    <div className="text-center mb-8">
+                      <h2 className="text-2xl font-semibold mb-2">Featured Live Streamers</h2>
+                      <p className="text-gray-600">Discover amazing live content from our promoted creators</p>
+                    </div>
+                    <PromotionalProfiles showAssociateButton={false} />
+                  </div>
+                </TabsContent>
                 
                 {/* Featured Content */}
                 <TabsContent value="all" className="mt-0">
