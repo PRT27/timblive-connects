@@ -63,12 +63,223 @@ export type Database = {
         }
         Relationships: []
       }
+      promotional_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          full_name: string
+          id: string
+          role: string | null
+          tags: string[] | null
+          updated_at: string
+          username: string
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          role?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          username: string
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          role?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          username?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      stream_integrations: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          platform: string
+          stream_url: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          platform: string
+          stream_url: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          platform?: string
+          stream_url?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      streams: {
+        Row: {
+          created_at: string
+          description: string | null
+          ended_at: string | null
+          id: string
+          likes_count: number | null
+          scheduled_at: string | null
+          started_at: string | null
+          status: string | null
+          stream_type: string | null
+          stream_url: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          viewer_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          ended_at?: string | null
+          id?: string
+          likes_count?: number | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string | null
+          stream_type?: string | null
+          stream_url?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          viewer_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          ended_at?: string | null
+          id?: string
+          likes_count?: number | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string | null
+          stream_type?: string | null
+          stream_url?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          viewer_count?: number | null
+        }
+        Relationships: []
+      }
+      user_promotional_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          main_user_id: string
+          promotional_profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          main_user_id: string
+          promotional_profile_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          main_user_id?: string
+          promotional_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_promotional_profiles_promotional_profile_id_fkey"
+            columns: ["promotional_profile_id"]
+            isOneToOne: false
+            referencedRelation: "promotional_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      associate_promotional_profile: {
+        Args: { user_uuid: string; profile_uuid: string }
+        Returns: boolean
+      }
+      create_stream: {
+        Args: {
+          user_uuid: string
+          stream_title: string
+          stream_description?: string
+          stream_type_param?: string
+          stream_tags?: string[]
+        }
+        Returns: string
+      }
+      disassociate_promotional_profile: {
+        Args: { user_uuid: string; profile_uuid: string }
+        Returns: boolean
+      }
+      get_active_streams: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          user_id: string
+          title: string
+          description: string
+          stream_type: string
+          viewer_count: number
+          likes_count: number
+          tags: string[]
+          started_at: string
+          created_at: string
+        }[]
+      }
+      get_promotional_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          full_name: string
+          username: string
+          bio: string
+          role: string
+          avatar_url: string
+          website: string
+          tags: string[]
+          created_at: string
+        }[]
+      }
+      get_user_promotional_profiles: {
+        Args: { user_uuid: string }
+        Returns: {
+          promotional_profile_id: string
+        }[]
+      }
+      update_stream_status: {
+        Args: { stream_uuid: string; new_status: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -9,23 +8,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import StreamShareLink from './StreamShareLink';
 import { Mic, MicOff, Camera, CameraOff, Monitor, MonitorOff, Settings, Volume2, ScreenShare, Cast } from 'lucide-react';
 
 interface DeviceStreamSetupProps {
-  streamId: string;
-  onStreamStart?: () => void;
+  streamId?: string;
+  onStreamStart?: (streamId: string) => void;
   onStreamEnd?: () => void;
   streamType?: 'live' | 'podcast' | 'broadcast' | 'video';
 }
 
 const DeviceStreamSetup: React.FC<DeviceStreamSetupProps> = ({ 
-  streamId, 
+  streamId: propStreamId, 
   onStreamStart, 
   onStreamEnd,
   streamType = 'live'
 }) => {
+  const { user } = useAuth();
   const [isLive, setIsLive] = useState(false);
+  const [currentStreamId, setCurrentStreamId] = useState<string | null>(propStreamId || null);
   const [isMicEnabled, setIsMicEnabled] = useState(true);
   const [isCameraEnabled, setIsCameraEnabled] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
@@ -203,7 +206,16 @@ const DeviceStreamSetup: React.FC<DeviceStreamSetupProps> = ({
     });
   };
   
-  const startLiveStream = () => {
+  const startLiveStream = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to start streaming.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!streamTitle.trim()) {
       toast({
         title: "Stream Title Required",
@@ -213,32 +225,77 @@ const DeviceStreamSetup: React.FC<DeviceStreamSetupProps> = ({
       return;
     }
     
-    setIsLive(true);
-    setViewerCount(1);
-    
-    if (onStreamStart) {
-      onStreamStart();
+    try {
+      const { data: streamId, error } = await supabase.rpc('create_stream', {
+        user_uuid: user.id,
+        stream_title: streamTitle,
+        stream_description: streamDescription || null,
+        stream_type_param: streamType,
+        stream_tags: []
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (streamId) {
+        setCurrentStreamId(streamId);
+        setIsLive(true);
+        setViewerCount(1);
+        
+        if (onStreamStart) {
+          onStreamStart(streamId);
+        }
+        
+        toast({
+          title: "Live Stream Started",
+          description: "Your stream is now live! Others can now join and watch.",
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error('Error starting stream:', error);
+      toast({
+        title: "Failed to Start Stream",
+        description: "Please try again.",
+        variant: "destructive",
+      });
     }
-    
-    toast({
-      title: "Live Stream Started",
-      description: "Your stream is now live! Others can now join and watch.",
-      variant: "default",
-    });
   };
   
-  const endLiveStream = () => {
-    setIsLive(false);
-    
-    if (onStreamEnd) {
-      onStreamEnd();
+  const endLiveStream = async () => {
+    if (!currentStreamId) return;
+
+    try {
+      const { error } = await supabase.rpc('update_stream_status', {
+        stream_uuid: currentStreamId,
+        new_status: 'ended'
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setIsLive(false);
+      setCurrentStreamId(null);
+      
+      if (onStreamEnd) {
+        onStreamEnd();
+      }
+      
+      toast({
+        title: "Stream Ended",
+        description: "Your live stream has ended. Thanks for streaming!",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Error ending stream:', error);
+      toast({
+        title: "Failed to End Stream",
+        description: "Please try again.",
+        variant: "destructive",
+      });
     }
-    
-    toast({
-      title: "Stream Ended",
-      description: "Your live stream has ended. Thanks for streaming!",
-      variant: "default",
-    });
   };
   
   const handleAudioLevelChange = (value: number[]) => {
@@ -264,7 +321,9 @@ const DeviceStreamSetup: React.FC<DeviceStreamSetupProps> = ({
           
           {!isLive && (
             <div className="flex items-center gap-2">
-              <StreamShareLink streamId={streamId} streamType={streamType} />
+              {currentStreamId && (
+                <StreamShareLink streamId={currentStreamId} streamType={streamType} />
+              )}
               <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white hover:bg-[#0077FF]/10">
                 <Settings className="h-5 w-5" />
               </Button>
@@ -422,7 +481,7 @@ const DeviceStreamSetup: React.FC<DeviceStreamSetupProps> = ({
                 size="lg"
                 className="w-full bg-red-500 hover:bg-red-600"
                 onClick={startLiveStream}
-                disabled={!mediaStream.current}
+                disabled={!mediaStream.current || !user}
               >
                 Go Live
               </Button>
@@ -431,14 +490,14 @@ const DeviceStreamSetup: React.FC<DeviceStreamSetupProps> = ({
         </CardContent>
       </Card>
       
-      {isLive && (
+      {isLive && currentStreamId && (
         <Card className="bg-[#0a0a1f]/80 backdrop-blur-xl border border-[#0077FF]/30 text-white shadow-lg shadow-[#0077FF]/20">
           <CardHeader>
             <CardTitle className="text-white">Share Your Stream</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-4">
-              <StreamShareLink streamId={streamId} streamType={streamType} />
+              <StreamShareLink streamId={currentStreamId} streamType={streamType} />
               
               <Button variant="outline" className="text-[#1DA1F2] border-[#1DA1F2]/30 hover:bg-[#1DA1F2]/10">
                 <Cast className="h-4 w-4 mr-2" />

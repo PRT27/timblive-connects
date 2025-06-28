@@ -1,21 +1,67 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Facebook, Instagram, Youtube, Twitter, Link, Globe } from 'lucide-react';
 
+interface StreamIntegration {
+  id: string;
+  platform: string;
+  stream_url: string;
+  is_active: boolean;
+}
+
 const StreamIntegration = () => {
+  const { user } = useAuth();
   const [platform, setPlatform] = useState('youtube');
   const [streamUrl, setStreamUrl] = useState('');
-  const [integrations, setIntegrations] = useState<Array<{id: string; platform: string; url: string}>>([]);
+  const [integrations, setIntegrations] = useState<StreamIntegration[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (user) {
+      fetchIntegrations();
+    }
+  }, [user]);
+
+  const fetchIntegrations = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('stream_integrations')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+
+      if (error) {
+        console.error('Error fetching integrations:', error);
+        return;
+      }
+
+      setIntegrations(data || []);
+    } catch (error) {
+      console.error('Error fetching integrations:', error);
+    }
+  };
+
   const handleAddIntegration = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to add integrations.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!streamUrl) {
       toast({
         title: "Missing URL",
@@ -28,15 +74,22 @@ const StreamIntegration = () => {
     setLoading(true);
     
     try {
-      // Here you'd typically save this to your database
-      // For now, we're just adding to our local state
-      const newIntegration = {
-        id: Date.now().toString(),
-        platform,
-        url: streamUrl,
-      };
-      
-      setIntegrations([...integrations, newIntegration]);
+      const { data, error } = await supabase
+        .from('stream_integrations')
+        .insert({
+          user_id: user.id,
+          platform,
+          stream_url: streamUrl,
+          is_active: true
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      setIntegrations([...integrations, data]);
       setStreamUrl('');
       
       toast({
@@ -56,13 +109,34 @@ const StreamIntegration = () => {
     }
   };
   
-  const handleRemoveIntegration = (id: string) => {
-    setIntegrations(integrations.filter(integration => integration.id !== id));
-    toast({
-      title: "Integration removed",
-      description: "The stream integration has been removed",
-      variant: "default",
-    });
+  const handleRemoveIntegration = async (id: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('stream_integrations')
+        .update({ is_active: false })
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      setIntegrations(integrations.filter(integration => integration.id !== id));
+      toast({
+        title: "Integration removed",
+        description: "The stream integration has been removed",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Error removing integration:', error);
+      toast({
+        title: "Failed to remove integration",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }
   };
   
   const getPlatformIcon = (platformName: string) => {
@@ -93,6 +167,16 @@ const StreamIntegration = () => {
     
     return platforms[platformId] || platformId;
   };
+
+  if (!user) {
+    return (
+      <Card className="bg-[#0a0a1f]/80 backdrop-blur-xl border border-[#0077FF]/30 text-white shadow-lg shadow-[#0077FF]/20">
+        <CardContent className="pt-6">
+          <p className="text-gray-400 text-center">Please sign in to manage stream integrations.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-[#0a0a1f]/80 backdrop-blur-xl border border-[#0077FF]/30 text-white shadow-lg shadow-[#0077FF]/20">
@@ -160,7 +244,7 @@ const StreamIntegration = () => {
                     <div>
                       <p className="font-medium text-white">{getPlatformName(integration.platform)}</p>
                       <p className="text-sm text-gray-400 truncate max-w-[200px] sm:max-w-xs">
-                        {integration.url}
+                        {integration.stream_url}
                       </p>
                     </div>
                   </div>
