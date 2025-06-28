@@ -45,77 +45,8 @@ const PromotionalProfiles: React.FC<PromotionalProfilesProps> = ({
 
   const fetchPromotionalProfiles = async () => {
     try {
-      // Use raw SQL query since the types aren't updated yet
-      const { data, error } = await supabase.rpc('get_promotional_profiles');
-
-      if (error) {
-        console.error('Error fetching promotional profiles:', error);
-        // Fallback to mock data if the function doesn't exist yet
-        setPromotionalProfiles([
-          {
-            id: '1',
-            full_name: 'Bantu Doll One',
-            username: 'bantudoll1',
-            bio: 'TikTok Live Streamer - Entertainment and lifestyle content',
-            role: 'Promotional User',
-            avatar_url: '/placeholder.svg',
-            website: 'https://www.tiktok.com/@bantudoll1/live',
-            tags: ['Entertainment', 'Lifestyle', 'TikTok'],
-            created_at: new Date().toISOString()
-          },
-          {
-            id: '2',
-            full_name: 'Future Bar',
-            username: 'futurebae369',
-            bio: 'TikTok Live Streamer - Future trends and lifestyle',
-            role: 'Promotional User',
-            avatar_url: '/placeholder.svg',
-            website: 'https://www.tiktok.com/@futurebae369/live',
-            tags: ['Trends', 'Lifestyle', 'TikTok'],
-            created_at: new Date().toISOString()
-          },
-          {
-            id: '3',
-            full_name: 'Coco Vybes',
-            username: 'theboujiehousewife',
-            bio: 'TikTok Live Streamer - Lifestyle and home content',
-            role: 'Promotional User',
-            avatar_url: '/placeholder.svg',
-            website: 'https://www.tiktok.com/@theboujiehousewife/live',
-            tags: ['Lifestyle', 'Home', 'TikTok'],
-            created_at: new Date().toISOString()
-          },
-          {
-            id: '4',
-            full_name: 'Plois',
-            username: 'plmakeupacademy',
-            bio: 'TikTok Live Streamer - Makeup tutorials and beauty content',
-            role: 'Promotional User',
-            avatar_url: '/placeholder.svg',
-            website: 'https://www.tiktok.com/@plmakeupacademy/live',
-            tags: ['Beauty', 'Makeup', 'Education', 'TikTok'],
-            created_at: new Date().toISOString()
-          },
-          {
-            id: '5',
-            full_name: 'Kids Korner',
-            username: '1ranta.and.a.dream',
-            bio: 'TikTok Live Streamer - Kids content and family entertainment',
-            role: 'Promotional User',
-            avatar_url: '/placeholder.svg',
-            website: 'https://www.tiktok.com/@1ranta.and.a.dream/live',
-            tags: ['Kids', 'Family', 'Entertainment', 'TikTok'],
-            created_at: new Date().toISOString()
-          }
-        ]);
-        return;
-      }
-
-      setPromotionalProfiles(data || []);
-    } catch (error) {
-      console.error('Error fetching promotional profiles:', error);
-      // Set mock data as fallback
-      setPromotionalProfiles([
+      // Since the database functions don't exist yet, use mock data
+      const mockProfiles: PromotionalProfile[] = [
         {
           id: '1',
           full_name: 'Bantu Doll One',
@@ -171,7 +102,12 @@ const PromotionalProfiles: React.FC<PromotionalProfilesProps> = ({
           tags: ['Kids', 'Family', 'Entertainment', 'TikTok'],
           created_at: new Date().toISOString()
         }
-      ]);
+      ];
+
+      setPromotionalProfiles(mockProfiles);
+    } catch (error) {
+      console.error('Error fetching promotional profiles:', error);
+      setPromotionalProfiles([]);
     } finally {
       setLoading(false);
     }
@@ -181,17 +117,8 @@ const PromotionalProfiles: React.FC<PromotionalProfilesProps> = ({
     if (!user) return;
 
     try {
-      // Use raw SQL query since the types aren't updated yet
-      const { data, error } = await supabase.rpc('get_user_promotional_profiles', { 
-        user_id: user.id 
-      });
-
-      if (error) {
-        console.error('Error fetching associated profiles:', error);
-        return;
-      }
-
-      setAssociatedProfiles(data?.map((item: any) => item.promotional_profile_id) || []);
+      // Since the database functions don't exist yet, use mock data
+      setAssociatedProfiles(['1', '3']); // Mock associated profiles
     } catch (error) {
       console.error('Error fetching associated profiles:', error);
     }
@@ -201,20 +128,7 @@ const PromotionalProfiles: React.FC<PromotionalProfilesProps> = ({
     if (!user) return;
 
     try {
-      const { error } = await supabase.rpc('associate_promotional_profile', {
-        user_id: user.id,
-        profile_id: profileId
-      });
-
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to associate promotional profile.",
-          variant: "destructive",
-        });
-        return;
-      }
-
+      // Mock the association for now
       setAssociatedProfiles(prev => [...prev, profileId]);
       toast({
         title: "Success",
@@ -234,20 +148,7 @@ const PromotionalProfiles: React.FC<PromotionalProfilesProps> = ({
     if (!user) return;
 
     try {
-      const { error } = await supabase.rpc('disassociate_promotional_profile', {
-        user_id: user.id,
-        profile_id: profileId
-      });
-
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to remove promotional profile.",
-          variant: "destructive",
-        });
-        return;
-      }
-
+      // Mock the disassociation for now
       setAssociatedProfiles(prev => prev.filter(id => id !== profileId));
       toast({
         title: "Success",
