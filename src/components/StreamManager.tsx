@@ -12,7 +12,20 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Play, Square, Users, Eye } from 'lucide-react';
 
-interface Stream {
+interface ActiveStream {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  stream_type: string;
+  viewer_count: number;
+  likes_count: number;
+  tags: string[];
+  started_at: string;
+  created_at: string;
+}
+
+interface UserStream {
   id: string;
   title: string;
   description: string;
@@ -28,8 +41,8 @@ interface Stream {
 const StreamManager = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeStreams, setActiveStreams] = useState<Stream[]>([]);
-  const [userStreams, setUserStreams] = useState<Stream[]>([]);
+  const [activeStreams, setActiveStreams] = useState<ActiveStream[]>([]);
+  const [userStreams, setUserStreams] = useState<UserStream[]>([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   
@@ -278,7 +291,7 @@ const StreamManager = () => {
                 <div key={stream.id} className="border rounded-lg p-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <h3 className="font-medium truncate">{stream.title}</h3>
-                    {getStatusBadge(stream.status)}
+                    <Badge className="bg-red-500 animate-pulse">LIVE</Badge>
                   </div>
                   
                   <p className="text-sm text-gray-600 line-clamp-2">{stream.description}</p>

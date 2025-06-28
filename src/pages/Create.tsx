@@ -7,7 +7,7 @@ import StreamIntegration from '@/components/StreamIntegration';
 import StreamManager from '@/components/StreamManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Camera, Globe, Settings, Broadcast } from 'lucide-react';
+import { Camera, Globe, Settings, Radio } from 'lucide-react';
 
 const Create = () => {
   return (
@@ -31,7 +31,7 @@ const Create = () => {
                 Device Stream
               </TabsTrigger>
               <TabsTrigger value="manage" className="flex items-center gap-2">
-                <Broadcast className="h-4 w-4" />
+                <Radio className="h-4 w-4" />
                 Stream Manager
               </TabsTrigger>
               <TabsTrigger value="integration" className="flex items-center gap-2">
