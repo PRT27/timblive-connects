@@ -1,172 +1,133 @@
 
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { Menu, X } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Play, Search, PlusCircle, User, Shield, LogOut, Home } from 'lucide-react';
 
 const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const location = useLocation();
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header 
-      className={cn(
-        'fixed w-full top-0 z-50 transition-all duration-300 ease-in-out',
-        isScrolled 
-          ? 'py-3 bg-white/80 backdrop-blur-lg shadow-sm' 
-          : 'py-5 bg-transparent'
-      )}
-    >
-      <div className="container flex items-center justify-between">
-        <Link 
-          to="/" 
-          className={cn(
-            'text-2xl font-bold transition-colors',
-            isScrolled ? 'text-timbl-700' : 'text-white text-shadow-sm'
-          )}
-        >
-          TiMBLive
-        </Link>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a1f]/95 backdrop-blur-xl border-b border-[#0077FF]/20 shadow-lg shadow-[#0077FF]/10">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-[#0077FF] to-[#33c3f0] rounded-lg flex items-center justify-center">
+              <Play className="h-5 w-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-white">TiMBLive</span>
+          </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
-          <Link 
-            to="/" 
-            className={cn(
-              'text-sm font-medium transition-colors hover:text-timbl',
-              isScrolled ? 'text-gray-700' : 'text-white/90'
-            )}
-          >
-            Home
-          </Link>
-          <Link 
-            to="/features" 
-            className={cn(
-              'text-sm font-medium transition-colors hover:text-timbl',
-              isScrolled ? 'text-gray-700' : 'text-white/90'
-            )}
-          >
-            Features
-          </Link>
-          <Link 
-            to="/pricing" 
-            className={cn(
-              'text-sm font-medium transition-colors hover:text-timbl',
-              isScrolled ? 'text-gray-700' : 'text-white/90'
-            )}
-          >
-            Pricing
-          </Link>
-          <Link 
-            to="/about" 
-            className={cn(
-              'text-sm font-medium transition-colors hover:text-timbl',
-              isScrolled ? 'text-gray-700' : 'text-white/90'
-            )}
-          >
-            About
-          </Link>
-          <div className="flex space-x-3">
-            <Link to="/signin">
-              <Button 
-                variant="outline" 
-                className={cn(
-                  'rounded-full px-5 transition-all',
-                  isScrolled 
-                    ? 'bg-white text-timbl border-timbl hover:bg-timbl-50' 
-                    : 'bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20'
-                )}
-              >
-                Sign In
-              </Button>
-            </Link>
-            <Link to="/signup">
-              <Button 
-                className="rounded-full px-5 bg-timbl hover:bg-timbl-600 text-white"
-              >
-                Sign Up
-              </Button>
-            </Link>
-          </div>
-        </nav>
-
-        {/* Mobile Menu Button */}
-        <button 
-          className="md:hidden"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
-        >
-          {isMobileMenuOpen ? (
-            <X className={isScrolled ? 'text-gray-900' : 'text-white'} />
-          ) : (
-            <Menu className={isScrolled ? 'text-gray-900' : 'text-white'} />
-          )}
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-white shadow-lg animate-fade-in-down">
-          <div className="container py-5 flex flex-col space-y-4">
+          {/* Navigation Links */}
+          <div className="hidden md:flex items-center space-x-6">
             <Link 
               to="/" 
-              className="text-gray-800 font-medium py-2"
-              onClick={() => setIsMobileMenuOpen(false)}
+              className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors ${
+                isActive('/') 
+                  ? 'text-[#33c3f0] bg-[#0077FF]/20' 
+                  : 'text-gray-300 hover:text-white hover:bg-[#151530]/60'
+              }`}
             >
-              Home
+              <Home className="h-4 w-4" />
+              <span>Home</span>
             </Link>
+            
             <Link 
-              to="/features" 
-              className="text-gray-800 font-medium py-2"
-              onClick={() => setIsMobileMenuOpen(false)}
+              to="/explore" 
+              className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors ${
+                isActive('/explore') 
+                  ? 'text-[#33c3f0] bg-[#0077FF]/20' 
+                  : 'text-gray-300 hover:text-white hover:bg-[#151530]/60'
+              }`}
             >
-              Features
+              <Search className="h-4 w-4" />
+              <span>Explore</span>
             </Link>
-            <Link 
-              to="/pricing" 
-              className="text-gray-800 font-medium py-2"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Pricing
-            </Link>
-            <Link 
-              to="/about" 
-              className="text-gray-800 font-medium py-2"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              About
-            </Link>
-            <div className="flex flex-col space-y-3 pt-2">
-              <Link to="/signin" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button 
-                  variant="outline" 
-                  className="w-full rounded-full border-timbl text-timbl"
+            
+            {user && (
+              <>
+                <Link 
+                  to="/create" 
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors ${
+                    isActive('/create') 
+                      ? 'text-[#33c3f0] bg-[#0077FF]/20' 
+                      : 'text-gray-300 hover:text-white hover:bg-[#151530]/60'
+                  }`}
                 >
-                  Sign In
-                </Button>
-              </Link>
-              <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button 
-                  className="w-full rounded-full bg-timbl hover:bg-timbl-600 text-white"
+                  <PlusCircle className="h-4 w-4" />
+                  <span>Create</span>
+                </Link>
+                
+                <Link 
+                  to="/protection" 
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors ${
+                    isActive('/protection') 
+                      ? 'text-[#33c3f0] bg-[#0077FF]/20' 
+                      : 'text-gray-300 hover:text-white hover:bg-[#151530]/60'
+                  }`}
                 >
-                  Sign Up
+                  <Shield className="h-4 w-4" />
+                  <span>Protection</span>
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* User Actions */}
+          <div className="flex items-center space-x-4">
+            {user ? (
+              <div className="flex items-center space-x-3">
+                <Link to="/dashboard">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-gray-300 hover:text-white hover:bg-[#151530]/60"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </Button>
+                </Link>
+                
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={signOut}
+                  className="text-gray-300 hover:text-white hover:bg-[#151530]/60"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
                 </Button>
-              </Link>
-            </div>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Link to="/signin">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-gray-300 hover:text-white hover:bg-[#151530]/60"
+                  >
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button 
+                    size="sm"
+                    className="bg-[#0077FF] hover:bg-[#33c3f0] text-white"
+                  >
+                    Sign Up
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
-      )}
-    </header>
+      </div>
+    </nav>
   );
 };
 

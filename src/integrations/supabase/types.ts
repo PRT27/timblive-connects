@@ -9,6 +9,227 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ad_space_requests: {
+        Row: {
+          ad_duration: number | null
+          agency_id: string
+          campaign_description: string | null
+          content_id: string
+          content_owner_id: string
+          content_type: string
+          created_at: string
+          end_date: string | null
+          id: string
+          proposed_price: number | null
+          start_date: string | null
+          status: string | null
+          target_audience: string | null
+          updated_at: string
+        }
+        Insert: {
+          ad_duration?: number | null
+          agency_id: string
+          campaign_description?: string | null
+          content_id: string
+          content_owner_id: string
+          content_type: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          proposed_price?: number | null
+          start_date?: string | null
+          status?: string | null
+          target_audience?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ad_duration?: number | null
+          agency_id?: string
+          campaign_description?: string | null
+          content_id?: string
+          content_owner_id?: string
+          content_type?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          proposed_price?: number | null
+          start_date?: string | null
+          status?: string | null
+          target_audience?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_space_requests_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "advertising_agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advertising_agencies: {
+        Row: {
+          business_license: string | null
+          company_name: string
+          contact_email: string
+          contact_phone: string | null
+          created_at: string
+          id: string
+          tax_id: string | null
+          updated_at: string
+          user_id: string
+          verification_documents: string[] | null
+          verification_status: string | null
+          website: string | null
+        }
+        Insert: {
+          business_license?: string | null
+          company_name: string
+          contact_email: string
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          tax_id?: string | null
+          updated_at?: string
+          user_id: string
+          verification_documents?: string[] | null
+          verification_status?: string | null
+          website?: string | null
+        }
+        Update: {
+          business_license?: string | null
+          company_name?: string
+          contact_email?: string
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          tax_id?: string | null
+          updated_at?: string
+          user_id?: string
+          verification_documents?: string[] | null
+          verification_status?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      content_licenses: {
+        Row: {
+          auto_approve: boolean | null
+          content_id: string
+          content_owner_id: string
+          content_type: string
+          created_at: string
+          duration_days: number | null
+          id: string
+          license_type: string | null
+          price: number | null
+          terms: string | null
+          updated_at: string
+        }
+        Insert: {
+          auto_approve?: boolean | null
+          content_id: string
+          content_owner_id: string
+          content_type: string
+          created_at?: string
+          duration_days?: number | null
+          id?: string
+          license_type?: string | null
+          price?: number | null
+          terms?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auto_approve?: boolean | null
+          content_id?: string
+          content_owner_id?: string
+          content_type?: string
+          created_at?: string
+          duration_days?: number | null
+          id?: string
+          license_type?: string | null
+          price?: number | null
+          terms?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      content_usage_monitoring: {
+        Row: {
+          content_id: string
+          content_owner_id: string
+          created_at: string
+          detected_url: string | null
+          id: string
+          reported_by: string | null
+          status: string | null
+          usage_platform: string | null
+          usage_type: string | null
+        }
+        Insert: {
+          content_id: string
+          content_owner_id: string
+          created_at?: string
+          detected_url?: string | null
+          id?: string
+          reported_by?: string | null
+          status?: string | null
+          usage_platform?: string | null
+          usage_type?: string | null
+        }
+        Update: {
+          content_id?: string
+          content_owner_id?: string
+          created_at?: string
+          detected_url?: string | null
+          id?: string
+          reported_by?: string | null
+          status?: string | null
+          usage_platform?: string | null
+          usage_type?: string | null
+        }
+        Relationships: []
+      }
+      copyright_claims: {
+        Row: {
+          claim_type: string | null
+          content_id: string
+          content_owner_id: string
+          content_type: string
+          created_at: string
+          description: string | null
+          evidence_urls: string[] | null
+          id: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          claim_type?: string | null
+          content_id: string
+          content_owner_id: string
+          content_type: string
+          created_at?: string
+          description?: string | null
+          evidence_urls?: string[] | null
+          id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          claim_type?: string | null
+          content_id?: string
+          content_owner_id?: string
+          content_type?: string
+          created_at?: string
+          description?: string | null
+          evidence_urls?: string[] | null
+          id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -227,6 +448,16 @@ export type Database = {
         Args: { user_uuid: string; profile_uuid: string }
         Returns: boolean
       }
+      create_copyright_claim: {
+        Args: {
+          owner_uuid: string
+          content_type_param: string
+          content_uuid: string
+          claim_description: string
+          evidence_urls_param?: string[]
+        }
+        Returns: string
+      }
       create_stream: {
         Args: {
           user_uuid: string
@@ -270,11 +501,41 @@ export type Database = {
           created_at: string
         }[]
       }
+      get_user_copyright_status: {
+        Args: { user_uuid: string }
+        Returns: {
+          total_claims: number
+          active_claims: number
+          content_licenses: number
+          ad_requests: number
+        }[]
+      }
       get_user_promotional_profiles: {
         Args: { user_uuid: string }
         Returns: {
           promotional_profile_id: string
         }[]
+      }
+      register_advertising_agency: {
+        Args: {
+          user_uuid: string
+          company_name_param: string
+          contact_email_param: string
+          business_license_param?: string
+          website_param?: string
+        }
+        Returns: string
+      }
+      request_ad_space: {
+        Args: {
+          agency_uuid: string
+          content_owner_uuid: string
+          content_type_param: string
+          content_uuid: string
+          proposed_price_param: number
+          campaign_desc: string
+        }
+        Returns: string
       }
       update_stream_status: {
         Args: { stream_uuid: string; new_status: string }

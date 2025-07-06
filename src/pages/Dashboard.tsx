@@ -1,8 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import ProfileEditor from '@/components/ProfileEditor';
@@ -10,7 +10,8 @@ import InviteSystem from '@/components/InviteSystem';
 import ProjectStatus from '@/components/ProjectStatus';
 import StreamIntegration from '@/components/StreamIntegration';
 import PromotionalProfiles from '@/components/PromotionalProfiles';
-import { Settings, Users, ChevronRight, Activity, VideoIcon, PlusCircle, MonitorPlay, Star } from 'lucide-react';
+import CopyrightProtection from '@/components/CopyrightProtection';
+import { Settings, Users, ChevronRight, Activity, PlusCircle, MonitorPlay, Star, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -132,6 +133,20 @@ const Dashboard = () => {
                   <Button 
                     variant="ghost" 
                     className={`w-full justify-start rounded-none py-5 px-5 text-left ${
+                      activeTab === 'protection' 
+                        ? 'bg-[#151530]/60 text-[#33c3f0]' 
+                        : 'text-gray-300 hover:text-white hover:bg-[#151530]/40'
+                    }`}
+                    onClick={() => setActiveTab('protection')}
+                  >
+                    <Shield className={`h-5 w-5 mr-3 ${activeTab === 'protection' ? 'text-[#33c3f0]' : 'text-gray-500'}`} />
+                    Copyright Protection
+                    <ChevronRight className="h-4 w-4 ml-auto" />
+                  </Button>
+                  
+                  <Button 
+                    variant="ghost" 
+                    className={`w-full justify-start rounded-none py-5 px-5 text-left ${
                       activeTab === 'invites' 
                         ? 'bg-[#151530]/60 text-[#33c3f0]' 
                         : 'text-gray-300 hover:text-white hover:bg-[#151530]/40'
@@ -197,6 +212,15 @@ const Dashboard = () => {
                     <p className="text-gray-400">Add or remove promotional streamers that will be featured on your profile</p>
                   </div>
                   <PromotionalProfiles showAssociateButton={true} isOwnProfile={true} />
+                </div>
+              )}
+              {activeTab === 'protection' && (
+                <div className="bg-[#0a0a1f]/80 backdrop-blur-xl border border-[#0077FF]/30 rounded-lg p-6 shadow-lg shadow-[#0077FF]/20">
+                  <div className="mb-6">
+                    <h2 className="text-xl font-bold text-white mb-2">Copyright Protection</h2>
+                    <p className="text-gray-400">Protect your content from unauthorized use and manage licensing</p>
+                  </div>
+                  <CopyrightProtection />
                 </div>
               )}
               {activeTab === 'invites' && <InviteSystem />}
