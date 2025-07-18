@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, Settings } from 'lucide-react';
 
 const SignIn = () => {
   const [email, setEmail] = useState('');
@@ -38,6 +38,11 @@ const SignIn = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const fillNPThwalaCredentials = () => {
+    setEmail('aran.assistivetechsolutions@gmail.com');
+    setPassword('#TiMBCEO1');
   };
 
   return (
@@ -98,6 +103,27 @@ const SignIn = () => {
                   required
                 />
               </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                type="button"
+                variant="outline"
+                onClick={fillNPThwalaCredentials}
+                className="flex-1 text-xs"
+              >
+                NPThwala Login
+              </Button>
+              <Link to="/admin" className="flex-1">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full text-xs flex items-center gap-1"
+                >
+                  <Settings className="h-3 w-3" />
+                  Admin
+                </Button>
+              </Link>
             </div>
             
             <Button 

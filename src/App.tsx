@@ -20,6 +20,7 @@ import Podcast from "./pages/Podcast";
 import Broadcast from "./pages/Broadcast";
 import ResetPassword from "./pages/ResetPassword";
 import UpdatePassword from "./pages/UpdatePassword";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,14 @@ const App = () => (
               <Route path="/live/:streamId" element={<LiveStream />} />
               <Route path="/podcast/:podcastId" element={<Podcast />} />
               <Route path="/broadcast/:broadcastId" element={<Broadcast />} />
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute>
+                    <AdminPanel />
+                  </ProtectedRoute>
+                } 
+              />
               <Route 
                 path="/dashboard" 
                 element={
