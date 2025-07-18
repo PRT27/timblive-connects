@@ -11,19 +11,39 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useProfile } from '@/contexts/ProfileContext';
+import { supabase } from '@/integrations/supabase/client';
 import DeviceStreamSetup from '@/components/DeviceStreamSetup';
 import { Heart, MessageSquare, Share2, Gift, Users, Settings, MaximizeIcon, PictureInPicture, Camera, MicOff, Mic, CameraOff, MoreVertical } from 'lucide-react';
 
-// Sample livestream data - updated with Percy's content focus
-const livestreams = [
+const LiveStream = () => {
+  const { streamId } = useParams();
+  const { toast } = useToast();
+  const { toggleFollowProfile, followedProfiles } = useProfile();
+  const [chatMessage, setChatMessage] = useState('');
+  
+  // Real livestream data from database
+  const [livestreams, setLivestreams] = useState([]);
+
+  const fetchLivestreams = async () => {
+  try {
+    const { data, error } = await supabase.rpc('get_active_streams');
+    if (error) throw error;
+    setLivestreams(data || []);
+  } catch (error) {
+    console.error('Error fetching livestreams:', error);
+  }
+};
+
+// Mock data as fallback
+const mockLivestreams = [
   {
-    id: 'aran-vi-showcase',
-    title: 'ARAN-VI Mobile App Showcase',
-    description: 'Join me for a comprehensive walkthrough of the ARAN-VI mobile application for visually impaired users. I\'ll be demonstrating its key features and discussing the technology behind it.',
+    id: 'np-tech-showcase',
+    title: 'Innovation in Assistive Technology',
+    description: 'Live discussion about creating technology solutions that make a difference in accessibility and assistive technology.',
     streamer: {
       id: 'npthwala',
-      name: 'Nhlanhla Percy Thwala',
-      role: 'Founder & Developer',
+      name: 'NP Thwala',
+      role: 'Creator & Developer',
       avatar: '/lovable-uploads/154e58ca-c0f8-48da-ae69-23b7cb16b25f.png'
     },
     tags: ['Assistive Technology', 'Accessibility', 'Innovation'],
@@ -48,11 +68,13 @@ const livestreams = [
   }
 ];
 
-const LiveStream = () => {
-  const { streamId } = useParams();
-  const { toast } = useToast();
-  const { toggleFollowProfile, followedProfiles } = useProfile();
-  const [chatMessage, setChatMessage] = useState('');
+  useEffect(() => {
+    fetchLivestreams();
+  }, []);
+  
+  // Use mock data as fallback  
+  const displayLivestreams = livestreams.length > 0 ? livestreams : mockLivestreams;
+  
   const [comments, setComments] = useState([
     { id: 1, user: 'Alex Chen', message: 'This is incredible technology! 🔥', time: '2m ago' },
     { id: 2, user: 'Sarah Johnson', message: 'Can you explain more about how ARAN-VI helps with navigation?', time: '1m ago' },
@@ -68,7 +90,7 @@ const LiveStream = () => {
   const [selectedCamera, setSelectedCamera] = useState<string>('');
   
   // Find the current livestream
-  const livestream = livestreams.find(stream => stream.id === streamId);
+  const livestream = displayLivestreams.find(stream => stream.id === streamId);
   
   useEffect(() => {
     // Get available cameras

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -11,18 +11,51 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useProfile } from '@/contexts/ProfileContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Calendar, Users, Bell, MessageSquare, Heart, Share2, Clock } from 'lucide-react';
 
-// Sample broadcast data - focusing on tech/accessibility content
-const broadcasts = [
+const Broadcast = () => {
+  const { broadcastId } = useParams();
+  const { toast } = useToast();
+  const { toggleFollowProfile, followedProfiles } = useProfile();
+  const [notificationEnabled, setNotificationEnabled] = useState(false);
+  
+  // Real broadcast data from database
+  const [broadcasts, setBroadcasts] = useState([]);
+
+  const fetchBroadcasts = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('streams')
+      .select(`
+        *,
+        profiles!streams_user_id_fkey (
+          username,
+          full_name,
+          avatar_url,
+          role
+        )
+      `)
+      .eq('stream_type', 'broadcast')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    setBroadcasts(data || []);
+  } catch (error) {
+    console.error('Error fetching broadcasts:', error);
+  }
+};
+
+// Mock data as fallback for demo
+const mockBroadcasts = [
   {
-    id: 'aran-vi-demo',
-    title: 'ARAN-VI: Live Demo & Q&A Session',
-    description: 'Join me for a live demonstration of the Accessible Rural Assistive Network for Visual Impaired (ARAN-VI) mobile application. I\'ll showcase its features and answer your questions.',
+    id: 'np-thwala-demo',
+    title: 'Tech Innovation & Accessibility Solutions',
+    description: 'Join me for insights into creating innovative technology solutions with a focus on accessibility and assistive technology.',
     host: {
       id: 'npthwala',
-      name: 'Nhlanhla Percy Thwala',
-      role: 'Founder & Developer',
+      name: 'NP Thwala',
+      role: 'Creator & Developer',
       avatar: '/lovable-uploads/154e58ca-c0f8-48da-ae69-23b7cb16b25f.png'
     },
     coverImage: 'https://images.unsplash.com/photo-1573164713988-8665fc963095',
@@ -53,14 +86,15 @@ const broadcasts = [
   }
 ];
 
-const Broadcast = () => {
-  const { broadcastId } = useParams();
-  const { toast } = useToast();
-  const { toggleFollowProfile, followedProfiles } = useProfile();
-  const [notificationEnabled, setNotificationEnabled] = useState(false);
+  useEffect(() => {
+    fetchBroadcasts();
+  }, []);
+  
+  // Use mock data as fallback
+  const displayBroadcasts = broadcasts.length > 0 ? broadcasts : mockBroadcasts;
   
   // Find the current broadcast
-  const broadcast = broadcasts.find(b => b.id === broadcastId);
+  const broadcast = displayBroadcasts.find(b => b.id === broadcastId);
   
   if (!broadcast) {
     return (

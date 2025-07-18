@@ -77,15 +77,24 @@ const DeviceStreamSetup: React.FC<DeviceStreamSetupProps> = ({
   useEffect(() => {
     requestMediaPermissions();
     
-    // Simulation of viewership 
+    // Real viewership tracking
     if (isLive) {
       const interval = setInterval(() => {
-        setViewerCount(prev => Math.min(prev + Math.floor(Math.random() * 5), 1000));
-      }, 10000);
+        // In a real implementation, this would fetch from your streaming service
+        fetchViewerCount();
+      }, 30000);
       
       return () => clearInterval(interval);
     }
   }, [isLive]);
+
+  const fetchViewerCount = async () => {
+    // Real viewer count fetching logic would go here
+    // For now, maintaining current count unless stream ends
+    if (!isLive) {
+      setViewerCount(0);
+    }
+  };
   
   const startCamera = async () => {
     try {

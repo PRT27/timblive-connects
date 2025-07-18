@@ -8,11 +8,14 @@ import ProfileEditor from '@/components/ProfileEditor';
 import VideoCard from '@/components/VideoCard';
 import PromotionalProfiles from '@/components/PromotionalProfiles';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { ProfileType } from '@/types/profile';
 
 const UserProfile = () => {
   const { username } = useParams<{ username: string }>();
   const { mainProfile, getUserProfile } = useProfile();
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState<ProfileType | null>(null);
   
@@ -40,14 +43,40 @@ const UserProfile = () => {
     );
   }
   
-  const isOwnProfile = true; // In a real app, compare with the logged-in user's ID
+  const isOwnProfile = user?.id === profile?.id;
   
-  // Mock data for content
-  const userContent = [
+  // Real user content from database
+  const [userContent, setUserContent] = useState([]);
+
+  const fetchUserContent = async () => {
+    if (!profile?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('streams')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setUserContent(data || []);
+    } catch (error) {
+      console.error('Error fetching user content:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (profile) {
+      fetchUserContent();
+    }
+  }, [profile]);
+
+  // Mock data as fallback
+  const mockUserContent = [
     {
       id: '1',
-      title: 'Introduction to ARAN-VI Assistant',
-      description: 'Learn about the ARAN-VI mobile application for visually impaired users',
+      title: 'Technology Innovation Discussion',
+      description: 'Insights into creating innovative technology solutions',
       thumbnail: '/placeholder.svg',
       duration: '12:34',
       views: 1240,

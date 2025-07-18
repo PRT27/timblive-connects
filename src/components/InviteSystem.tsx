@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -87,12 +87,18 @@ const InviteSystem = () => {
     }
   };
 
-  // Mock data for recent invites
-  const recentInvites = [
-    { id: 1, email: 'friend@example.com', status: 'pending', date: '2 days ago' },
-    { id: 2, email: 'colleague@example.com', status: 'accepted', date: '5 days ago' },
-    { id: 3, email: 'contact@example.com', status: 'accepted', date: '1 week ago' },
-  ];
+  // Real invites data - fetch from database
+  const [recentInvites, setRecentInvites] = useState([]);
+
+  useEffect(() => {
+    // In a real implementation, fetch invites from your backend
+    fetchRecentInvites();
+  }, []);
+
+  const fetchRecentInvites = async () => {
+    // Real invite fetching logic would go here
+    setRecentInvites([]);
+  };
   
   return (
     <Tabs defaultValue="send" className="w-full">

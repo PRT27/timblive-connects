@@ -8,7 +8,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import ProfileEditor from '@/components/ProfileEditor';
 import InviteSystem from '@/components/InviteSystem';
 import ProjectStatus from '@/components/ProjectStatus';
-import StreamIntegration from '@/components/StreamIntegration';
+import RealStreamManager from '@/components/RealStreamManager';
 import PromotionalProfiles from '@/components/PromotionalProfiles';
 import CopyrightProtection from '@/components/CopyrightProtection';
 import { Settings, Users, ChevronRight, Activity, PlusCircle, MonitorPlay, Star, Shield } from 'lucide-react';
@@ -204,7 +204,7 @@ const Dashboard = () => {
             {/* Right Column - Content Area */}
             <div className="lg:col-span-3">
               {activeTab === 'profile' && <ProfileEditor onCancel={handleProfileCancel} onSave={handleProfileSave} />}
-              {activeTab === 'stream' && <StreamIntegration />}
+              {activeTab === 'stream' && <RealStreamManager />}
               {activeTab === 'promoted' && (
                 <div className="bg-[#0a0a1f]/80 backdrop-blur-xl border border-[#0077FF]/30 rounded-lg p-6 shadow-lg shadow-[#0077FF]/20">
                   <div className="mb-6">
