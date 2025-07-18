@@ -73,7 +73,7 @@ const AdminUserManager = () => {
         throw userError;
       }
 
-      const targetUser = userData.users.find(user => user.email === targetEmail);
+      const targetUser = userData.users.find((user: any) => user.email === targetEmail);
       
       if (!targetUser) {
         throw new Error('User not found');
@@ -132,7 +132,7 @@ const AdminUserManager = () => {
         throw userError;
       }
 
-      const targetUser = userData.users.find(user => user.email === targetEmail);
+      const targetUser = userData.users.find((user: any) => user.email === targetEmail);
       
       if (!targetUser) {
         throw new Error('User not found in auth');
